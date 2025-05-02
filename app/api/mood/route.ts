@@ -6,164 +6,200 @@ interface NewsArticle {
   description: string | null
   url: string
 }
-
 interface ArticleWithSentiment extends NewsArticle {
   sentiment: 'positive' | 'neutral' | 'negative'
 }
 
-const HF_MODEL = 'siebert/sentiment-roberta-large-english';
+const HF_MODEL    = 'siebert/sentiment-roberta-large-english'
 const HF_ENDPOINT = `https://api-inference.huggingface.co/models/${HF_MODEL}`
-const LLM_MODEL = 'gpt-3.5-turbo'; // Or any other suitable LLM
+const LLM_MODEL   = 'gpt-3.5-turbo'
 
-// Map ISO codes to full country names for fallback search
-const countryCodes: Record<string, string> = {
-  'United States': 'us',
-  'Thailand': 'th',
-  'Japan': 'jp',
-  'United Kingdom': 'gb',
-  'Germany': 'de',
-  'United States of America': 'us',
-  'UK': 'gb',
-  'Deutschland': 'de',
-};
+// 1) ISO codes we allow directly:
+const ISO_CODES = ['us','th','jp','gb','de','ca','fr','it','es','au'] as const
 
-// Use a dynamic approach to get country names
-const getCountryCode = (countryName: string): string => {
-  const lowerCaseName = countryName.toLowerCase();
-  for (const fullName in countryCodes) {
-    if (lowerCaseName === fullName.toLowerCase()) {
-      return countryCodes[fullName];
-    }
-  }
-  return '';
-};
-
-// Function to interact with an LLM (replace with your actual LLM API call)
-async function getCountryCodeFromLLM(countryName: string): Promise<string> {
-  const llmKey = process.env.OPENAI_API_KEY; // Or your LLM API key
-  if (!llmKey) {
-    throw new Error('LLM API key is missing.');
-  }
-
-  const prompt = `What is the 2-letter ISO country code for ${countryName}?`;
-
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', { // Use the correct OpenAI endpoint
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${llmKey}`,
-      },
-      body: JSON.stringify({
-        model: LLM_MODEL,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        max_tokens: 10, // Adjust as needed
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('LLM API error:', errorData); // Log the error
-      throw new Error(`LLM API request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const llmResponse = data.choices[0]?.message?.content?.trim();
-    console.log("LLM response", llmResponse)
-    // Extract the country code from the LLM response (very basic extraction)
-    const code = llmResponse?.slice(-2).toLowerCase(); // Get last 2 chars, lowercase
-    if (code && code.length === 2) {
-      return code;
-    }
-    return ''; // Return empty string if extraction fails
-
-  } catch (error) {
-    console.error('LLM request error:', error);
-    return ''; // Return empty string on error
-  }
+// 2) Full-name → code fallback:
+const countryCodes: Record<string,string> = {
+  'United States':          'us',
+  'United States of America':'us',
+  'UK':                     'gb',
+  'United Kingdom':         'gb',
+  'Germany':                'de',
+  'Deutschland':            'de',
+  'France':                 'fr',
+  'Spain':                  'es',
+  'Italy':                  'it',
+  'Canada':                 'ca',
+  'Australia':              'au',
+  'Japan':                  'jp',
+  'Thailand':               'th',
 }
 
-export async function GET(request: Request): Promise<NextResponse> {
+// 3) Language fallback map for top-headlines:
+const languageMap: Record<string,string> = {
+  us: 'en', gb: 'en', ca: 'en', au: 'en',
+  fr: 'fr', de: 'de', es: 'es', it: 'it',
+  jp: 'ja', th: 'th',
+}
+
+function getCountryCodeStatic(name: string): string {
+  const lower = name.toLowerCase()
+  // if already a 2-letter code:
+  if (ISO_CODES.includes(lower as typeof ISO_CODES[number])) return lower
+  // otherwise match full names:
+  for (const full of Object.keys(countryCodes)) {
+    if (lower === full.toLowerCase()) {
+      return countryCodes[full]
+    }
+  }
+  return ''
+}
+
+async function getCountryCodeFromLLM(countryName: string): Promise<string> {
+  const llmKey = process.env.OPENAI_API_KEY
+  if (!llmKey) throw new Error('Missing OPENAI_API_KEY')
+  const prompt = `What is the 2-letter ISO country code for ${countryName}?`
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type':'application/json',
+      'Authorization': `Bearer ${llmKey}`,
+    },
+    body: JSON.stringify({
+      model: LLM_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 10,
+    }),
+  })
+  if (!res.ok) throw new Error(`LLM error ${res.status}`)
+  const data = await res.json()
+  const text = data.choices?.[0]?.message?.content?.trim() || ''
+  const code = text.slice(-2).toLowerCase()
+  return ISO_CODES.includes(code as typeof ISO_CODES[number]) ? code : ''
+}
+
+export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const raw = searchParams.get('country')
-  const countryName = raw?.trim();
-  if (!countryName) {
-    return NextResponse.json({ error: 'Country parameter is required' }, { status: 400 })
+  const raw = searchParams.get('country')?.trim() || ''
+  
+  if (!raw) {
+    return NextResponse.json(
+      { error: 'Country parameter is required' }, 
+      { status: 400 }
+    )
   }
 
-  const newsKey = process.env.NEWS_API_KEY!
-  const hfKey = process.env.HUGGINGFACE_API_KEY!
+  // Validate API keys early
+  const newsKey = process.env.NEWS_API_KEY
+  const hfKey = process.env.HUGGINGFACE_API_KEY
+  if (!newsKey) return NextResponse.json(
+    { error: 'News API key missing' }, 
+    { status: 500 }
+  )
+  if (!hfKey) return NextResponse.json(
+    { error: 'Hugging Face key missing' }, 
+    { status: 500 }
+  )
+
+  let code = getCountryCodeStatic(raw)
+  let llmUsed = false
+
+  // LLM fallback
+  if (!code) {
+    try {
+      code = await getCountryCodeFromLLM(raw)
+      llmUsed = true
+    } catch (e) {
+      console.error('LLM fallback failed:', e)
+    }
+  }
+
+  console.log(`Country resolution: "${raw}" → code="${code}" (LLM: ${llmUsed})`)
+
   let articles: NewsArticle[] = []
+  let apiRequests = []
 
-  let countryCode = getCountryCode(countryName); // Try the static list first
-  if (!countryCode) {
-    countryCode = await getCountryCodeFromLLM(countryName); // If not found, ask the LLM
-  }
-  console.log(`Country Name: ${countryName}, Country Code: ${countryCode}`);
-
-  // 1) Try top-headlines
-  if (countryCode) {
-    const res = await fetch(
-      `https://newsapi.org/v2/top-headlines?country=${countryCode}&pageSize=3&apiKey=${newsKey}`
+  // Try different NewsAPI endpoints
+  if (code) {
+    apiRequests.push(
+      fetch(`https://newsapi.org/v2/top-headlines?country=${code}&pageSize=3&apiKey=${newsKey}`)
+        .then(async res => {
+          if (!res.ok) return null
+          const data = await res.json()
+          return data.articles || []
+        })
     )
-    if (res.ok) {
-      const json = await res.json()
-      articles = (json.articles || []).map((a: any) => ({
-        title: a.title,
-        description: a.description,
-        url: a.url,
-      }))
+    
+    const lang = languageMap[code]
+    if (lang) {
+      apiRequests.push(
+        fetch(`https://newsapi.org/v2/top-headlines?language=${lang}&pageSize=3&apiKey=${newsKey}`)
+          .then(async res => {
+            if (!res.ok) return null
+            const data = await res.json()
+            return data.articles || []
+          })
+      )
     }
   }
 
-  // 2) Fallback to everything?q=Country Name if top-headlines fails
-  if (articles.length === 0) {
-    const res = await fetch(
-      `https://newsapi.org/v2/everything?q=${encodeURIComponent(countryName)}&pageSize=3&apiKey=${newsKey}`
-    )
-    if (res.ok) {
-      const json = await res.json()
-      articles = (json.articles || []).map((a: any) => ({
-        title: a.title,
-        description: a.description,
-        url: a.url,
-      }))
-    }
-  }
+  // Add fallback search
+  apiRequests.push(
+    fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(raw)}&pageSize=3&apiKey=${newsKey}`)
+      .then(async res => {
+        if (!res.ok) return null
+        const data = await res.json()
+        return data.articles || []
+      })
+  )
 
-  // 3) Analyze sentiment for each article
-  const results = await Promise.all(
-    articles.map(async (article) => {
-      const text = article.description || article.title;
-      console.log('Text for sentiment analysis:', text);
-      try {
-        const hfRes = await fetch(HF_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${hfKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ inputs: text }),
-        });
-        if (!hfRes.ok) throw new Error('HF analysis failed');
-        const hfData: Array<{ label: string }> = await hfRes.json();
-        console.log('Hugging Face API response:', hfData);
-        const label = hfData[0]?.label;
-        let sentiment: ArticleWithSentiment['sentiment'] = 'neutral';
-        if (label === 'POSITIVE') sentiment = 'positive';
-        if (label === 'NEGATIVE') sentiment = 'negative';
-        return { ...article, sentiment };
-      } catch (error) {
-        console.error('Error during sentiment analysis:', error);
-        return { ...article, sentiment: 'neutral' };
+  // Process all API requests
+  try {
+    const results = await Promise.all(apiRequests)
+    for (const result of results) {
+      if (result && result.length > 0) {
+        articles = result.map((a: any) => ({
+          title: a.title,
+          description: a.description,
+          url: a.url,
+        }))
+        break
       }
-    })
-  );
+    }
+  } catch (e) {
+    console.error('NewsAPI request failed:', e)
+    return NextResponse.json(
+      { error: 'Failed to fetch news articles' }, 
+      { status: 500 }
+    )
+  }
 
-  return NextResponse.json(results);
+  // Sentiment analysis with error handling
+  const results: ArticleWithSentiment[] = []
+  for (const article of articles) {
+    try {
+      const text = article.description ?? article.title
+      const hfRes = await fetch(HF_ENDPOINT, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${hfKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inputs: text }),
+      })
+      
+      if (!hfRes.ok) throw new Error(`HF API: ${hfRes.status}`)
+      
+      const hfJson: { label: string }[] = await hfRes.json()
+      const lbl = hfJson[0]?.label
+      
+      results.push({
+        ...article,
+        sentiment: lbl === 'POSITIVE' ? 'positive' 
+          : lbl === 'NEGATIVE' ? 'negative' 
+          : 'neutral'
+      })
+    } catch (e) {
+      console.error('Sentiment analysis failed:', e)
+      results.push({ ...article, sentiment: 'neutral' })
+    }
+  }
+
+  return NextResponse.json(results)
 }

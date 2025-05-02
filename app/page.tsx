@@ -1,3 +1,5 @@
+//app/page.tsx
+
 'use client'
 
 import { useState } from 'react'
@@ -35,7 +37,7 @@ export default function FirstPage() {
         <button
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={() => router.push('/auth/auth.tsx')}
+          onClick={() => router.push('/dashboard')}
           className={`
             px-14 py-4
             rounded-xl
