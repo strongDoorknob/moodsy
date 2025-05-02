@@ -11,7 +11,7 @@ export default function FirstPage() {
     <div className="relative h-screen w-full overflow-hidden">
       <div className="absolute inset-0 items-center">
         <img
-          src="img/wallpaper.png"
+          src="img/globe.png"
           className="h-full w-full object-cover"
         />
       </div>
@@ -35,7 +35,7 @@ export default function FirstPage() {
         <button
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push('/auth/auth.tsx')}
           className={`
             px-14 py-4
             rounded-xl
@@ -44,8 +44,8 @@ export default function FirstPage() {
             transform hover:scale-105
             ${
               isHovered
-                ? 'bg-gradient-to-r from-[#161670] via-[#0c0c3d] via-[#070724] via-[#050517] via-[#030310] to-[#02020a] text-white shadow-2xl'
-                : 'bg-gradient-to-r from-[#161670] via-[#0c0c3d] via-[#070724] via-[#050517] via-[#030310] to-[#02020a] text-white shadow-lg'
+                ? 'bg-gradient-to-r from-[#161670] to-[#02020a] text-white shadow-2xl'
+                : 'bg-gradient-to-r from-[#161670] to-[#02020a] text-white shadow-lg'
             }
           `}
         >
