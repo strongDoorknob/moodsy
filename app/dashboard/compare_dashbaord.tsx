@@ -1,7 +1,7 @@
 // components/ComparisonDashboard.tsx
 import { useEffect, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { Button } from '@/components/ui/button'
+// import { Button } from '@/components/ui/button'
 import html2canvas from 'html2canvas'
 
 type DataPoint = {
@@ -87,7 +87,7 @@ export default function ComparisonDashboard({ countries, apiUrl = '/api/mood' }:
           </ResponsiveContainer>
         )}
       </div>
-      <div className="mt-4 flex space-x-2">
+      {/* <div className="mt-4 flex space-x-2">
         <Button onClick={handleSnapshot}>Save Snapshot</Button>
         <Button asChild>
           <a
@@ -97,7 +97,7 @@ export default function ComparisonDashboard({ countries, apiUrl = '/api/mood' }:
             Share Link
           </a>
         </Button>
-      </div>
+      </div> */}
     </div>
 )}
 
