@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 type ArticleWithSentiment = {
   title: string
@@ -17,7 +18,7 @@ type CountryMood = {
   articles: ArticleWithSentiment[]
 }
 
-const ALL_CODES = ['US', 'TH', 'JP', 'GB', 'DE', 'CA', 'FR', 'IT', 'ES', 'AU'] as const
+const ALL_CODES = ['US', 'TH', 'JP', 'GB', 'DE', 'CA', 'FR', 'IT', 'ES', 'AU', 'RU', 'IN'] as const
 
 export default function DashboardPage() {
   const [data, setData] = useState<CountryMood[]>([])
@@ -26,12 +27,21 @@ export default function DashboardPage() {
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [inputCode, setInputCode] = useState('')
   const [inputError, setInputError] = useState<string | null>(null)
+  const [fetchCount, setFetchCount] = useState(0)
+  const [showPopup, setShowPopup] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (!selectedCodes.length) {
       setData([])
       return
     }
+
+    if (fetchCount >= 10) {
+      setShowPopup(true)
+      return
+    }
+
     setLoading(true)
     setError(null)
     Promise.all(
@@ -44,7 +54,10 @@ export default function DashboardPage() {
     )
       .then(setData)
       .catch(() => setError('Failed to load'))
-      .finally(() => setLoading(false))
+      .finally(() => {
+        setLoading(false)
+        setFetchCount(prev => prev + 1)
+      })
   }, [selectedCodes])
 
   const addCode = () => {
@@ -72,12 +85,34 @@ export default function DashboardPage() {
     setSelectedCodes(selectedCodes.filter(c => c !== code))
 
   const handleProUpgrade = () => {
-    // redirect to your pricing or upgrade page
-    window.open('/pricing', '_blank')
+    router.push('/pro')
   }
 
   return (
-    <div className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-blue-50 text-black">
+      {/* Pop-up modal */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-xl p-6 shadow-lg w-96 text-center">
+            <h2 className="text-xl font-bold mb-4">Limit Reached</h2>
+            <p className="mb-6">You've reached your limit of 10 mood data fetches. Unlock unlimited access with Pro edition.</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowPopup(false)}
+                className="px-4 py-2 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleProUpgrade}
+                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Go Pro
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Top Navigation */}
       <nav className="flex items-center justify-between mb-12">
         <Link
@@ -151,7 +186,7 @@ export default function DashboardPage() {
                 Add Country
               </button>
             </div>
-            
+
             <div className="flex gap-2 items-center text-sm text-gray-500">
               <span>Supported codes:</span>
               <div className="flex gap-1.5 flex-wrap">
@@ -287,13 +322,12 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      mainSentiment === 'positive'
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${mainSentiment === 'positive'
                         ? 'bg-green-100 text-green-800'
                         : mainSentiment === 'negative'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
                   >
                     {mainSentiment.charAt(0).toUpperCase() + mainSentiment.slice(1)}
                   </span>
@@ -336,13 +370,12 @@ export default function DashboardPage() {
                         >
                           <div className="flex items-start gap-3">
                             <div
-                              className={`w-1.5 h-full rounded-full ${
-                                article.sentiment === 'positive'
+                              className={`w-1.5 h-full rounded-full ${article.sentiment === 'positive'
                                   ? 'bg-green-500'
                                   : article.sentiment === 'negative'
-                                  ? 'bg-red-500'
-                                  : 'bg-gray-400'
-                              }`}
+                                    ? 'bg-red-500'
+                                    : 'bg-gray-400'
+                                }`}
                             />
                             <div>
                               <p className="text-sm font-medium text-gray-900 line-clamp-2">
