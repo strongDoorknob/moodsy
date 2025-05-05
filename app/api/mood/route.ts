@@ -10,14 +10,13 @@ interface ArticleWithSentiment extends NewsArticle {
   sentiment: 'positive' | 'neutral' | 'negative'
 }
 
-const HF_MODEL    = 'siebert/sentiment-roberta-large-english'
+const HF_MODEL    = 'nlptown/bert-base-multilingual-uncased-sentiment'
 const HF_ENDPOINT = `https://api-inference.huggingface.co/models/${HF_MODEL}`
 const LLM_MODEL   = 'gpt-3.5-turbo'
 
-// 1) ISO codes we allow directly:
-const ISO_CODES = ['us','th','jp','gb','de','ca','fr','it','es','au'] as const
+const cache = new Map<string, string>()
 
-// 2) Full-name → code fallback:
+const ISO_CODES = ['us','th','jp','gb','de','ca','fr','it','es','au'] as const
 const countryCodes: Record<string,string> = {
   'United States':          'us',
   'United States of America':'us',
@@ -33,8 +32,6 @@ const countryCodes: Record<string,string> = {
   'Japan':                  'jp',
   'Thailand':               'th',
 }
-
-// 3) Language fallback map for top-headlines:
 const languageMap: Record<string,string> = {
   us: 'en', gb: 'en', ca: 'en', au: 'en',
   fr: 'fr', de: 'de', es: 'es', it: 'it',
@@ -43,9 +40,7 @@ const languageMap: Record<string,string> = {
 
 function getCountryCodeStatic(name: string): string {
   const lower = name.toLowerCase()
-  // if already a 2-letter code:
   if (ISO_CODES.includes(lower as typeof ISO_CODES[number])) return lower
-  // otherwise match full names:
   for (const full of Object.keys(countryCodes)) {
     if (lower === full.toLowerCase()) {
       return countryCodes[full]
@@ -80,7 +75,6 @@ async function getCountryCodeFromLLM(countryName: string): Promise<string> {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const raw = searchParams.get('country')?.trim() || ''
-  
   if (!raw) {
     return NextResponse.json(
       { error: 'Country parameter is required' }, 
@@ -88,7 +82,6 @@ export async function GET(request: Request) {
     )
   }
 
-  // Validate API keys early
   const newsKey = process.env.NEWS_API_KEY
   const hfKey = process.env.HUGGINGFACE_API_KEY
   if (!newsKey) return NextResponse.json(
@@ -102,8 +95,6 @@ export async function GET(request: Request) {
 
   let code = getCountryCodeStatic(raw)
   let llmUsed = false
-
-  // LLM fallback
   if (!code) {
     try {
       code = await getCountryCodeFromLLM(raw)
@@ -118,7 +109,6 @@ export async function GET(request: Request) {
   let articles: NewsArticle[] = []
   let apiRequests = []
 
-  // Try different NewsAPI endpoints
   if (code) {
     apiRequests.push(
       fetch(`https://newsapi.org/v2/top-headlines?country=${code}&pageSize=3&apiKey=${newsKey}`)
@@ -128,7 +118,6 @@ export async function GET(request: Request) {
           return data.articles || []
         })
     )
-    
     const lang = languageMap[code]
     if (lang) {
       apiRequests.push(
@@ -142,7 +131,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Add fallback search
   apiRequests.push(
     fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(raw)}&pageSize=3&apiKey=${newsKey}`)
       .then(async res => {
@@ -152,7 +140,6 @@ export async function GET(request: Request) {
       })
   )
 
-  // Process all API requests
   try {
     const results = await Promise.all(apiRequests)
     for (const result of results) {
@@ -173,28 +160,25 @@ export async function GET(request: Request) {
     )
   }
 
-  // Sentiment analysis with error handling
   const results: ArticleWithSentiment[] = []
   for (const article of articles) {
     try {
-      const text = article.description ?? article.title
+      const text = (article.title + ' ' + (article.description || '')).trim()
+      if (cache.has(text)) {
+        results.push({ ...article, sentiment: cache.get(text)! as 'positive' | 'neutral' | 'negative' })
+        continue
+      }
       const hfRes = await fetch(HF_ENDPOINT, {
         method: 'POST',
         headers: { Authorization: `Bearer ${hfKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ inputs: text }),
       })
-      
       if (!hfRes.ok) throw new Error(`HF API: ${hfRes.status}`)
-      
       const hfJson: { label: string }[] = await hfRes.json()
-      const lbl = hfJson[0]?.label
-      
-      results.push({
-        ...article,
-        sentiment: lbl === 'POSITIVE' ? 'positive' 
-          : lbl === 'NEGATIVE' ? 'negative' 
-          : 'neutral'
-      })
+      const stars = parseInt(hfJson[0]?.label[0])
+      const sentiment = stars <= 2 ? 'negative' : stars === 3 ? 'neutral' : 'positive'
+      cache.set(text, sentiment)
+      results.push({ ...article, sentiment })
     } catch (e) {
       console.error('Sentiment analysis failed:', e)
       results.push({ ...article, sentiment: 'neutral' })

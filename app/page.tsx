@@ -23,7 +23,6 @@ export default function FirstPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Fix hydration mismatch by ensuring consistent random values
   const particlePositions = Array.from({ length: 30 }).map(() => ({
     x: Math.random() * 100,
     y: Math.random() * 100
@@ -75,7 +74,7 @@ export default function FirstPage() {
         <motion.button
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push('/auth')}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           className="relative px-16 py-5 rounded-2xl text-2xl font-bold transition-all duration-300 group overflow-hidden shadow-xl hover:shadow-[0_0_40px_-5px_rgba(22,22,112,0.6)]"
@@ -108,7 +107,7 @@ export default function FirstPage() {
                 {[1].map((i) => (
                   <img
                     key={i}
-                    src={`/img/avatars/${i}.jpg`}
+                    src={`/img/avatars/${i}.png`}
                     className="w-8 h-8 rounded-full border-2 border-white"
                     alt="User avatar"
                     loading="lazy"

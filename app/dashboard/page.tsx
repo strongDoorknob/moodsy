@@ -99,15 +99,11 @@ export default function DashboardPage() {
               <button
                 onClick={() => setShowPopup(false)}
                 className="px-4 py-2 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
-              >
-                Cancel
-              </button>
+              >Cancel</button>
               <button
                 onClick={handleProUpgrade}
                 className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-              >
-                Go Pro
-              </button>
+              >Go Pro</button>
             </div>
           </div>
         </div>
@@ -121,7 +117,7 @@ export default function DashboardPage() {
             </span>
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Track real-time sentiment analysis across global news. Add country codes below to monitor media sentiment.
+            Track real-time multilingual sentiment analysis across global news. Add country codes below to monitor media sentiment.
           </p>
         </header>
 
