@@ -21,17 +21,20 @@ export default function ConfirmPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Simulate submission
     setSubmitted(true)
   }
 
+  const subtotal = 7.99
+  const tax = parseFloat((subtotal * 0.07).toFixed(2))
+  const total = parseFloat((subtotal + tax).toFixed(2))
+
   return (
-    <div className="min-h-screen w-full px-4 md:px-8 py-12 bg-gray-50 font-sans text-gray-900">
+    <div className="min-h-screen w-full px-4 md:px-8 py-12 bg-gray-50 text-gray-900 font-sans">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 flex items-center">
           <svg className="w-8 h-8 mr-3 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
-            <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd"/>
+            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+            <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
           </svg>
           Checkout
         </h1>
@@ -43,31 +46,27 @@ export default function ConfirmPage() {
               <h2 className="text-xl font-semibold mb-6 text-gray-700">Your Order</h2>
               <div className="flex items-center space-x-5 mb-8">
                 <div className="w-24 h-24 bg-indigo-50 rounded-lg p-3">
-                  <img
-                    src="/img/intro-pro.png"
-                    alt="Moodsy PRO"
-                    className="w-full h-full object-contain"
-                  />
+                  <img src="/img/intro-pro.png" alt="Moodsy PRO" className="w-full h-full object-contain" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Moodsy PRO</h3>
                   <p className="text-sm text-gray-500">Advanced mood tracking program</p>
-                  <p className="mt-2 font-bold text-indigo-600">฿7.99/month</p>
+                  <p className="mt-2 font-bold text-indigo-600">${subtotal}/month</p>
                 </div>
               </div>
 
               <div className="space-y-3 border-t pt-6">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>฿7.99</span>
+                  <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Tax</span>
-                  <span>฿0.00</span>
+                  <span>Tax (7%)</span>
+                  <span>${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-900 font-semibold pt-2">
                   <span>Total</span>
-                  <span className="text-lg">฿7.99</span>
+                  <span className="text-lg">${total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -75,71 +74,39 @@ export default function ConfirmPage() {
             {/* Checkout Form */}
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
               <h2 className="text-xl font-semibold mb-6 text-gray-700">Payment Details</h2>
-
               <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                  <div className="relative">
+                {[
+                  { label: 'Full Name', name: 'name', placeholder: 'John Doe' },
+                  { label: 'Email', name: 'email', placeholder: 'john@example.com', type: 'email' },
+                  { label: 'Billing Address', name: 'address', placeholder: '123 Main St' }
+                ].map(({ label, name, placeholder, type = 'text' }) => (
+                  <div key={name}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
                     <input
-                      name="name"
-                      value={form.name}
+                      type={type}
+                      name={name}
+                      value={form[name as keyof typeof form]}
                       onChange={handleChange}
                       required
+                      placeholder={placeholder}
                       className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
-                      placeholder="John Doe"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
-                      placeholder="john@example.com"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Billing Address</label>
-                  <div className="relative">
-                    <input
-                      name="address"
-                      value={form.address}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
-                      placeholder="123 Main St"
-                    />
-                  </div>
-                </div>
+                ))}
 
                 <div className="border-t pt-6">
                   <h3 className="text-sm font-semibold text-gray-900 mb-5">Card Information</h3>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-                    <div className="relative">
-                      <input
-                        name="cardNumber"
-                        value={form.cardNumber}
-                        onChange={handleChange}
-                        required
-                        placeholder="1234 5678 9012 3456"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
-                      />
-                      <div className="absolute right-3 top-3">
-                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 3h2a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zm10 0h2a1 1 0 011 1v16a1 1 0 01-1 1h-2a1 1 0 01-1-1V4a1 1 0 011-1z"/>
-                        </svg>
-                      </div>
-                    </div>
+                    <input
+                      name="cardNumber"
+                      value={form.cardNumber}
+                      onChange={handleChange}
+                      required
+                      placeholder="1234 5678 9012 3456"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mt-4">
@@ -175,7 +142,7 @@ export default function ConfirmPage() {
                   >
                     Confirm Payment
                     <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
                   </button>
                 </div>
@@ -191,7 +158,7 @@ export default function ConfirmPage() {
             <div className="mb-5 flex justify-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
                 <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </div>
@@ -203,7 +170,7 @@ export default function ConfirmPage() {
             >
               Place Another Order
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </button>
           </div>

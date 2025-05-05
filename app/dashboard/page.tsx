@@ -1,4 +1,4 @@
-// app/page.tsx (or pages/dashboard.tsx)
+// app/dashboard/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -37,11 +37,6 @@ export default function DashboardPage() {
       return
     }
 
-    if (fetchCount >= 10) {
-      setShowPopup(true)
-      return
-    }
-
     setLoading(true)
     setError(null)
     Promise.all(
@@ -54,23 +49,28 @@ export default function DashboardPage() {
     )
       .then(setData)
       .catch(() => setError('Failed to load'))
-      .finally(() => {
-        setLoading(false)
-        setFetchCount(prev => prev + 1)
-      })
+      .finally(() => setLoading(false))
   }, [selectedCodes])
 
   const addCode = () => {
     const code = inputCode.trim().toUpperCase()
     if (!code) return
+
     if (!ALL_CODES.includes(code as any)) {
       setInputError(`"${code}" invalid`)
     } else if (selectedCodes.includes(code)) {
       setInputError(`"${code}" already added`)
     } else {
+      const newCount = fetchCount + 1
+      setFetchCount(newCount)
+      if (newCount >= 10) {
+        setShowPopup(true)
+        return
+      }
       setSelectedCodes([...selectedCodes, code])
       setInputError(null)
     }
+
     setInputCode('')
   }
 
@@ -89,8 +89,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-blue-50 text-black">
-      {/* Pop-up modal */}
+    <div className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-blue-50 text-black font-sans">
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white rounded-xl p-6 shadow-lg w-96 text-center">
@@ -113,62 +112,19 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      {/* Top Navigation */}
-      <nav className="flex items-center justify-between mb-12">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span className="font-medium">Back to Home</span>
-        </Link>
-        <button
-          onClick={handleProUpgrade}
-          className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full text-white shadow-lg hover:shadow-xl transition-all"
-        >
-          <span className="font-semibold">Upgrade to Pro</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
-      </nav>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto">
+      <main className="max-w-4xl mx-auto">
         <header className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3">
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
               Global Mood Monitor
             </span>
-            🌏
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Track real-time sentiment analysis across global news. Add country codes below to
-            monitor media sentiment.
+            Track real-time sentiment analysis across global news. Add country codes below to monitor media sentiment.
           </p>
         </header>
 
-        {/* Country Input Section */}
         <section className="mb-8">
           <div className="flex flex-col items-center gap-4">
             <div className="relative w-full max-w-md">
@@ -178,10 +134,16 @@ export default function DashboardPage() {
                 onKeyDown={onInputKey}
                 placeholder="Enter country code (e.g., US, FR)"
                 className="w-full px-6 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors pr-24"
+                disabled={fetchCount >= 10}
               />
               <button
                 onClick={addCode}
-                className="absolute right-2 top-2 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className={`absolute right-2 top-2 px-6 py-2 rounded-lg transition-colors ${
+                  fetchCount >= 10
+                    ? 'bg-gray-400 cursor-not-allowed text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+                disabled={fetchCount >= 10}
               >
                 Add Country
               </button>
@@ -191,32 +153,26 @@ export default function DashboardPage() {
               <span>Supported codes:</span>
               <div className="flex gap-1.5 flex-wrap">
                 {ALL_CODES.map(code => (
-                  <span key={code} className="px-2 py-1 bg-gray-100 rounded-md">
-                    {code}
-                  </span>
+                  <span key={code} className="px-2 py-1 bg-gray-100 rounded-md">{code}</span>
                 ))}
               </div>
             </div>
 
+            <div className="text-sm text-gray-600 mt-2">
+              Countries added: <span className={fetchCount >= 10 ? 'text-red-600 font-bold' : 'font-semibold'}>{fetchCount}</span>/10
+            </div>
+
             {inputError && (
               <div className="flex items-center gap-2 text-red-500 mt-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
                 {inputError}
               </div>
             )}
           </div>
         </section>
+
 
         {/* Selected Countries */}
         {selectedCodes.length > 0 && (
