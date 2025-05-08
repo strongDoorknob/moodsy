@@ -354,3 +354,258 @@ export default function DashboardPage() {
   )
 }
 
+// // app/dashboard/page.tsx
+// 'use client'
+
+// import { useEffect, useState } from 'react'
+// import { motion } from 'framer-motion'
+// import Link from 'next/link'
+// import { useRouter } from 'next/navigation'
+
+// type ArticleWithSentiment = {
+//   title: string
+//   description: string | null
+//   url: string
+//   sentiment: 'positive' | 'neutral' | 'negative'
+// }
+
+// type CountryMood = {
+//   country: string
+//   articles: ArticleWithSentiment[]
+// }
+
+// const ALL_CODES = ['US', 'TH', 'JP', 'GB', 'DE', 'CA', 'FR', 'IT', 'ES', 'AU', 'RU', 'IN', 'CN', 'BR', 'KR', 'MX'] as const
+
+// export default function DashboardPage() {
+//   const [data, setData] = useState<CountryMood[]>([])
+//   const [loading, setLoading] = useState(false)
+//   const [error, setError] = useState<string | null>(null)
+//   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
+//   const [inputCode, setInputCode] = useState('')
+//   const [inputError, setInputError] = useState<string | null>(null)
+//   const [fetchCount, setFetchCount] = useState(0)
+//   const [showPopup, setShowPopup] = useState(false)
+//   const [activeTab, setActiveTab] = useState<'dashboard' | 'comparison' | 'embedded'>('dashboard')
+//   const [isPro] = useState(false) // Normally would come from auth context
+//   const [popupMessage, setPopupMessage] = useState('')
+//   const router = useRouter()
+
+//   useEffect(() => {
+//     if (!selectedCodes.length) {
+//       setData([])
+//       return
+//     }
+
+//     setLoading(true)
+//     setError(null)
+//     Promise.all(
+//       selectedCodes.map(code =>
+//         fetch(`/api/mood?country=${code}`)
+//           .then(r => (r.ok ? r.json() : Promise.reject()))
+//           .then((arr: ArticleWithSentiment[]) => ({ country: code, articles: arr }))
+//           .catch(() => ({ country: code, articles: [] }))
+//       )
+//     )
+//       .then(setData)
+//       .catch(() => setError('Failed to load'))
+//       .finally(() => setLoading(false))
+//   }, [selectedCodes])
+
+//   const handleTabChange = (tab: 'dashboard' | 'comparison' | 'embedded') => {
+//     if ((tab === 'comparison' || tab === 'embedded') && !isPro) {
+//       setPopupMessage(tab === 'comparison' 
+//         ? 'Unlock Multi-country Comparison views with Pro edition.' 
+//         : 'Unlock Embeddable Charts for your websites with Pro edition.')
+//       setShowPopup(true)
+//       return
+//     }
+//     setActiveTab(tab)
+//   }
+
+//   const addCode = () => {
+//     const code = inputCode.trim().toUpperCase()
+//     if (!code) return
+
+//     if (!ALL_CODES.includes(code as any)) {
+//       setInputError(`"${code}" invalid`)
+//     } else if (selectedCodes.includes(code)) {
+//       setInputError(`"${code}" already added`)
+//     } else {
+//       const newCount = fetchCount + 1
+//       setFetchCount(newCount)
+//       if (newCount >= 10) {
+//         setPopupMessage('You\'ve reached your limit of 10 mood data fetches. Unlock unlimited access with Pro edition.')
+//         setShowPopup(true)
+//         return
+//       }
+//       setSelectedCodes([...selectedCodes, code])
+//       setInputError(null)
+//     }
+//     setInputCode('')
+//   }
+
+//   const onInputKey = (e: React.KeyboardEvent) => {
+//     if (e.key === 'Enter') {
+//       e.preventDefault()
+//       addCode()
+//     }
+//   }
+
+//   const removeCode = (code: string) =>
+//     setSelectedCodes(selectedCodes.filter(c => c !== code))
+
+//   const handleProUpgrade = () => {
+//     router.push('/pro')
+//   }
+
+//   return (
+//     <div className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-blue-50 text-black font-sans">
+//       {showPopup && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+//           <div className="bg-white rounded-xl p-6 shadow-lg w-96 text-center">
+//             <h2 className="text-xl font-bold mb-4">Pro Feature</h2>
+//             <p className="mb-6">{popupMessage}</p>
+//             <div className="flex justify-center gap-4">
+//               <button
+//                 onClick={() => setShowPopup(false)}
+//                 className="px-4 py-2 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
+//               >Cancel</button>
+//               <button
+//                 onClick={handleProUpgrade}
+//                 className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+//               >Go Pro</button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
+//       <main className="max-w-6xl mx-auto">
+//         <header className="mb-12 text-center relative">
+//           <div className="absolute top-0 right-0">
+//             <button
+//               onClick={handleProUpgrade}
+//               className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-colors shadow-sm"
+//             >
+//               Go Pro
+//             </button>
+//           </div>
+//           <h1 className="text-4xl font-bold text-gray-900 mb-4">
+//             <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+//               Global Mood Monitor
+//             </span>
+//           </h1>
+//           <p className="text-gray-600 max-w-2xl mx-auto">
+//             Track real-time multilingual sentiment analysis across global news. Add country codes below to monitor media sentiment.
+//           </p>
+
+//           <div className="flex justify-center gap-4 mt-8">
+//             <button
+//               onClick={() => handleTabChange('dashboard')}
+//               className={`px-6 py-2 rounded-lg transition-all ${
+//                 activeTab === 'dashboard'
+//                   ? 'bg-blue-500 text-white shadow-lg'
+//                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+//               }`}
+//             >
+//               Real-time Mood
+//             </button>
+//             <button
+//               onClick={() => handleTabChange('comparison')}
+//               className={`px-6 py-2 rounded-lg transition-all ${
+//                 isPro 
+//                   ? activeTab === 'comparison'
+//                     ? 'bg-blue-500 text-white shadow-lg'
+//                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+//                   : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+//               }`}
+//               disabled={!isPro}
+//             >
+//               Multi-country Comparison
+//             </button>
+//             <button
+//               onClick={() => handleTabChange('embedded')}
+//               className={`px-6 py-2 rounded-lg transition-all ${
+//                 isPro
+//                   ? activeTab === 'embedded'
+//                     ? 'bg-blue-500 text-white shadow-lg'
+//                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+//                   : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+//               }`}
+//               disabled={!isPro}
+//             >
+//               Embeddable Charts
+//             </button>
+//           </div>
+//         </header>
+
+//         {activeTab === 'dashboard' ? (
+//           <>
+//             <section className="mb-8">
+//               <div className="flex flex-col items-center gap-4">
+//                 <div className="relative w-full max-w-md">
+//                   <input
+//                     value={inputCode}
+//                     onChange={e => setInputCode(e.target.value)}
+//                     onKeyDown={onInputKey}
+//                     placeholder="Enter country code (e.g., US, FR)"
+//                     className="w-full px-6 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors pr-24"
+//                     disabled={fetchCount >= 10}
+//                   />
+//                   <button
+//                     onClick={addCode}
+//                     className={`absolute right-2 top-2 px-6 py-2 rounded-lg transition-colors ${
+//                       fetchCount >= 10
+//                         ? 'bg-gray-400 cursor-not-allowed text-white'
+//                         : 'bg-blue-500 hover:bg-blue-600 text-white'
+//                     }`}
+//                     disabled={fetchCount >= 10}
+//                   >
+//                     Add Country
+//                   </button>
+//                 </div>
+
+//                 <div className="flex gap-2 items-center text-sm text-gray-500">
+//                   <span>Supported codes:</span>
+//                   <div className="flex gap-1.5 flex-wrap">
+//                     {ALL_CODES.map(code => (
+//                       <span key={code} className="px-2 py-1 bg-gray-100 rounded-md">{code}</span>
+//                     ))}
+//                   </div>
+//                 </div>
+
+//                 <div className="text-sm text-gray-600 mt-2">
+//                   Countries added: <span className={fetchCount >= 10 ? 'text-red-600 font-bold' : 'font-semibold'}>{fetchCount}</span>/10
+//                 </div>
+
+//                 {inputError && (
+//                   <div className="flex items-center gap-2 text-red-500 mt-2">
+//                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+//                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+//                     </svg>
+//                     {inputError}
+//                   </div>
+//                 )}
+//               </div>
+//             </section>
+
+//             {/* Selected Countries and Data Display */}
+//             {/* ... (keep existing dashboard content unchanged) */}
+//           </>
+//         ) : activeTab === 'comparison' ? (
+//           <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+//             <h3 className="text-2xl font-bold mb-4">Multi-country Comparison</h3>
+//             <p className="text-gray-600">Compare historical sentiment trends across multiple countries (Pro feature)</p>
+//           </div>
+//         ) : (
+//           <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+//             <h3 className="text-2xl font-bold mb-4">Embeddable Charts</h3>
+//             <p className="text-gray-600">Generate embed codes for interactive charts (Pro feature)</p>
+//           </div>
+//         )}
+
+//         {/* Rest of the existing dashboard content */}
+//         {/* ... (keep existing loading, error states, and country cards grid) */}
+//       </main>
+//     </div>
+//   )
+// }

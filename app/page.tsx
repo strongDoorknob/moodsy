@@ -74,7 +74,7 @@ export default function FirstPage() {
         <motion.button
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={() => router.push('/auth')}
+          onClick={() => router.push('/dashboard')}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           className="relative px-16 py-5 rounded-2xl text-2xl font-bold transition-all duration-300 group overflow-hidden shadow-xl hover:shadow-[0_0_40px_-5px_rgba(22,22,112,0.6)]"
