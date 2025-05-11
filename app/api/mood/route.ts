@@ -10,29 +10,27 @@ interface ArticleWithSentiment extends NewsArticle {
   sentiment: 'positive' | 'neutral' | 'negative'
 }
 
-const HF_MODEL    = 'nlptown/bert-base-multilingual-uncased-sentiment'
-const HF_ENDPOINT = `https://api-inference.huggingface.co/models/${HF_MODEL}`
-const LLM_MODEL   = 'gpt-3.5-turbo'
+const LLM_MODEL = 'gpt-3.5-turbo'
 
 const cache = new Map<string, string>()
 
-const ISO_CODES = ['us','th','jp','gb','de','ca','fr','it','es','au'] as const
-const countryCodes: Record<string,string> = {
-  'United States':          'us',
-  'United States of America':'us',
-  'UK':                     'gb',
-  'United Kingdom':         'gb',
-  'Germany':                'de',
-  'Deutschland':            'de',
-  'France':                 'fr',
-  'Spain':                  'es',
-  'Italy':                  'it',
-  'Canada':                 'ca',
-  'Australia':              'au',
-  'Japan':                  'jp',
-  'Thailand':               'th',
+const ISO_CODES = ['us', 'th', 'jp', 'gb', 'de', 'ca', 'fr', 'it', 'es', 'au'] as const
+const countryCodes: Record<string, string> = {
+  'United States': 'us',
+  'United States of America': 'us',
+  'UK': 'gb',
+  'United Kingdom': 'gb',
+  'Germany': 'de',
+  'Deutschland': 'de',
+  'France': 'fr',
+  'Spain': 'es',
+  'Italy': 'it',
+  'Canada': 'ca',
+  'Australia': 'au',
+  'Japan': 'jp',
+  'Thailand': 'th',
 }
-const languageMap: Record<string,string> = {
+const languageMap: Record<string, string> = {
   us: 'en', gb: 'en', ca: 'en', au: 'en',
   fr: 'fr', de: 'de', es: 'es', it: 'it',
   jp: 'ja', th: 'th',
@@ -56,7 +54,7 @@ async function getCountryCodeFromLLM(countryName: string): Promise<string> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Content-Type':'application/json',
+      'Content-Type': 'application/json',
       'Authorization': `Bearer ${llmKey}`,
     },
     body: JSON.stringify({
@@ -77,7 +75,7 @@ export async function GET(request: Request) {
   const raw = searchParams.get('country')?.trim() || ''
   if (!raw) {
     return NextResponse.json(
-      { error: 'Country parameter is required' }, 
+      { error: 'Country parameter is required' },
       { status: 400 }
     )
   }
@@ -85,11 +83,11 @@ export async function GET(request: Request) {
   const newsKey = process.env.NEWS_API_KEY
   const hfKey = process.env.HUGGINGFACE_API_KEY
   if (!newsKey) return NextResponse.json(
-    { error: 'News API key missing' }, 
+    { error: 'News API key missing' },
     { status: 500 }
   )
   if (!hfKey) return NextResponse.json(
-    { error: 'Hugging Face key missing' }, 
+    { error: 'Hugging Face key missing' },
     { status: 500 }
   )
 
@@ -155,7 +153,7 @@ export async function GET(request: Request) {
   } catch (e) {
     console.error('NewsAPI request failed:', e)
     return NextResponse.json(
-      { error: 'Failed to fetch news articles' }, 
+      { error: 'Failed to fetch news articles' },
       { status: 500 }
     )
   }
@@ -168,15 +166,33 @@ export async function GET(request: Request) {
         results.push({ ...article, sentiment: cache.get(text)! as 'positive' | 'neutral' | 'negative' })
         continue
       }
-      const hfRes = await fetch(HF_ENDPOINT, {
+      const openaiKey = process.env.OPENAI_API_KEY
+      if (!openaiKey) throw new Error('Missing OPENAI_API_KEY')
+
+      const prompt = `Classify the sentiment of this news article as Positive, Neutral, or Negative:\n\n"${text}"\n\nSentiment:`
+
+      const llmRes = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${hfKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputs: text }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openaiKey}`,
+        },
+        body: JSON.stringify({
+          model: LLM_MODEL,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0,
+          max_tokens: 10,
+        }),
       })
-      if (!hfRes.ok) throw new Error(`HF API: ${hfRes.status}`)
-      const hfJson: { label: string }[] = await hfRes.json()
-      const stars = parseInt(hfJson[0]?.label[0])
-      const sentiment = stars <= 2 ? 'negative' : stars === 3 ? 'neutral' : 'positive'
+
+      if (!llmRes.ok) throw new Error(`OpenAI Sentiment API Error: ${llmRes.status}`)
+      const llmJson = await llmRes.json()
+      const rawSentiment = llmJson.choices?.[0]?.message?.content?.trim().toLowerCase()
+      const sentiment = rawSentiment.includes('positive')
+        ? 'positive'
+        : rawSentiment.includes('negative')
+          ? 'negative'
+          : 'neutral'
       cache.set(text, sentiment)
       results.push({ ...article, sentiment })
     } catch (e) {
