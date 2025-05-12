@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 type ArticleWithSentiment = {
@@ -11,6 +10,8 @@ type ArticleWithSentiment = {
   description: string | null
   url: string
   sentiment: 'positive' | 'neutral' | 'negative'
+  imageUrl?: string | null
+  publishedAt?: string
 }
 
 type CountryMood = {
@@ -41,7 +42,7 @@ export default function DashboardPage() {
     setError(null)
     Promise.all(
       selectedCodes.map(code =>
-        fetch(`/api/mood?country=${code}`)
+        fetch(`/api/news?country=${code}`)
           .then(r => (r.ok ? r.json() : Promise.reject()))
           .then((arr: ArticleWithSentiment[]) => ({ country: code, articles: arr }))
           .catch(() => ({ country: code, articles: [] }))
@@ -167,7 +168,6 @@ export default function DashboardPage() {
             )}
           </div>
         </section>
-
 
         {/* Selected Countries */}
         {selectedCodes.length > 0 && (
@@ -437,7 +437,7 @@ export default function DashboardPage() {
                                   : 'bg-gray-400'
                                 }`}
                             />
-                            <div>
+                            <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900 line-clamp-2">
                                 {article.title}
                               </p>
@@ -446,7 +446,19 @@ export default function DashboardPage() {
                                   {article.description}
                                 </p>
                               )}
+                              {article.publishedAt && (
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                  {new Date(article.publishedAt).toLocaleDateString()}
+                                </p>
+                              )}
                             </div>
+                            {article.imageUrl && (
+                              <img
+                                src={article.imageUrl}
+                                alt={article.title}
+                                className="w-16 h-16 object-cover rounded-lg"
+                              />
+                            )}
                           </div>
                         </a>
                       ))}

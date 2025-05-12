@@ -77,7 +77,7 @@ export default function AuthPage() {
       if (res.status === 429) throw new Error('Too many attempts. Please wait.')
       if (!res.ok) throw new Error((await res.json()).detail || 'Authentication failed')
 
-      setTimeout(() => router.push('/dashboard'), 1000)
+      setTimeout(() => router.push('/preview'), 1000)
     } catch (err: any) {
       setError(err.message)
       setSubmitting(false)
