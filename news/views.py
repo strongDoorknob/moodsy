@@ -1,15 +1,25 @@
-# general/views.py
 import os
 import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from dotenv import load_dotenv # type: ignore
+from dotenv import load_dotenv  # type: ignore
 
-load_dotenv()
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch # type: ignore
+import torch.nn.functional as F # type: ignore
 
+# Load environment variables
+load_dotenv('.env.local')
+
+# API keys
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 HF_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+print(NEWS_API_KEY, HF_API_KEY, OPENAI_API_KEY)
+
+# Load sentiment model (nlptown)
+tokenizer = AutoTokenizer.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment")
+model = AutoModelForSequenceClassification.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment")
 
 @csrf_exempt
 def fetch_news_raw(request):
@@ -54,36 +64,28 @@ def fetch_news_with_sentiment(request):
             return JsonResponse({"error": f"NewsAPI request failed: {data.get('message')}"}, status=response.status_code)
 
         articles = data.get("articles", [])
+        print(f"[{country}] Received {len(articles)} articles")
+
         results = []
         for a in articles:
             text = (a.get("title", "") + " " + (a.get("description") or "")).strip()
-
-            # Call OpenAI LLM for sentiment
-            llm_res = requests.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {OPENAI_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "gpt-3.5-turbo",
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": f'Classify the sentiment of this news article as Positive, Neutral, or Negative:\n\n"{text}"\n\nSentiment:',
-                        }
-                    ],
-                    "temperature": 0,
-                    "max_tokens": 10,
-                },
-            )
             sentiment = "neutral"
-            if llm_res.ok:
-                raw = llm_res.json()["choices"][0]["message"]["content"].strip().lower()
-                if "positive" in raw:
-                    sentiment = "positive"
-                elif "negative" in raw:
-                    sentiment = "negative"
+
+            try:
+                inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+                with torch.no_grad():
+                    outputs = model(**inputs)
+                    probs = F.softmax(outputs.logits, dim=1)
+                    score = torch.argmax(probs, dim=1).item() + 1  
+                    if score <= 2:
+                        sentiment = "negative"
+                    elif score == 3:
+                        sentiment = "neutral"
+                    else:
+                        sentiment = "positive"
+            except Exception as e:
+                print(f"Sentiment analysis failed: {e}")
+                sentiment = "neutral"
 
             results.append({
                 "title": a.get("title"),

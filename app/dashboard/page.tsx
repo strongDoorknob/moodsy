@@ -1,7 +1,6 @@
-// app/dashboard/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 
@@ -32,27 +31,6 @@ export default function DashboardPage() {
   const [showPopup, setShowPopup] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    if (!selectedCodes.length) {
-      setData([])
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-    Promise.all(
-      selectedCodes.map(code =>
-        fetch(`/api/news?country=${code}`)
-          .then(r => (r.ok ? r.json() : Promise.reject()))
-          .then((arr: ArticleWithSentiment[]) => ({ country: code, articles: arr }))
-          .catch(() => ({ country: code, articles: [] }))
-      )
-    )
-      .then(setData)
-      .catch(() => setError('Failed to load'))
-      .finally(() => setLoading(false))
-  }, [selectedCodes])
-
   const addCode = () => {
     const code = inputCode.trim().toUpperCase()
     if (!code) return
@@ -63,13 +41,22 @@ export default function DashboardPage() {
       setInputError(`"${code}" already added`)
     } else {
       const newCount = fetchCount + 1
-      setFetchCount(newCount)
       if (newCount >= 10) {
         setShowPopup(true)
         return
       }
-      setSelectedCodes([...selectedCodes, code])
-      setInputError(null)
+
+      setLoading(true)
+      fetch(`http://127.0.0.1:8000/api/sentiment/?country=${code}`)
+        .then(r => (r.ok ? r.json() : Promise.reject()))
+        .then((arr: ArticleWithSentiment[]) => {
+          setData(prev => [...prev, { country: code, articles: arr }])
+          setSelectedCodes(prev => [...prev, code])
+          setFetchCount(newCount)
+          setInputError(null)
+        })
+        .catch(() => setError(`Failed to fetch data for ${code}`))
+        .finally(() => setLoading(false))
     }
 
     setInputCode('')
@@ -82,8 +69,11 @@ export default function DashboardPage() {
     }
   }
 
-  const removeCode = (code: string) =>
+  const removeCode = (code: string) => {
     setSelectedCodes(selectedCodes.filter(c => c !== code))
+    setData(data.filter(d => d.country !== code))
+    setFetchCount(fetchCount - 1)
+  }
 
   const handleProUpgrade = () => {
     router.push('/pro')
@@ -92,25 +82,42 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-blue-50 text-black font-sans">
       {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-xl p-6 shadow-lg w-96 text-center">
-            <h2 className="text-xl font-bold mb-4">Limit Reached</h2>
-            <p className="mb-6">You've reached your limit of 10 mood data fetches. Unlock unlimited access with Pro edition.</p>
-            <div className="flex justify-center gap-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50">
+          <div className="bg-white rounded-2xl p-8 shadow-2xl w-[90%] max-w-md text-center relative border border-gray-200">
+            <div className="absolute top-4 right-4">
               <button
                 onClick={() => setShowPopup(false)}
-                className="px-4 py-2 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
-              >Cancel</button>
+                className="text-gray-400 hover:text-gray-600 transition"
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold text-gray-800">Limit Reached</h2>
+              <p className="mt-2 text-gray-600 text-sm">
+                You've used all 10 free mood data fetches. Unlock unlimited access with the <strong>Pro edition</strong>.
+              </p>
+            </div>
+            <div className="mt-6 flex justify-center gap-4">
+              <button
+                onClick={() => setShowPopup(false)}
+                className="px-4 py-2 text-sm rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+              >
+                Maybe Later
+              </button>
               <button
                 onClick={handleProUpgrade}
-                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-              >Go Pro</button>
+                className="px-5 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition"
+              >
+                Go Pro
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      <main className="max-w-4xl mx-auto">
+      <main className="max-w-8xl mx-auto">
         <header className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3">
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
@@ -240,7 +247,7 @@ export default function DashboardPage() {
         )}
 
         {/* Country Cards Grid */}
-        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <section className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {data.map((item, i) => {
             const sentimentCounts = item.articles.reduce(
               (acc, article) => {
@@ -261,209 +268,105 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-shadow"
+                className={`relative p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden
+          ${mainSentiment === 'positive' ? 'bg-gradient-to-br from-green-50/80 to-green-100/20 border-2 border-green-100' :
+                    mainSentiment === 'negative' ? 'bg-gradient-to-br from-red-50/80 to-red-100/20 border-2 border-red-100' :
+                      'bg-gradient-to-br from-gray-50/80 to-gray-100/20 border-2 border-gray-100'}
+        `}
               >
-                <header className="flex justify-between items-start mb-6">
+                {/* Country Flag Header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center 
+            ${mainSentiment === 'positive' ? 'bg-green-500' :
+                      mainSentiment === 'negative' ? 'bg-red-500' : 'bg-gray-500'}`
+                  }>
+                    <span className="text-2xl font-bold text-white">{item.country}</span>
+                  </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                      {item.country}
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {new Intl.DisplayNames(['en'], { type: 'region' }).of(item.country)}
                     </h2>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span>{item.articles.length} articles analyzed</span>
+                    <p className="text-sm text-gray-500">
+                      {item.articles.length} articles analyzed
+                    </p>
+                  </div>
+                </div>
+
+                {/* Sentiment Ribbon */}
+                <div className={`absolute top-4 right-[-24px] px-8 py-1 rotate-45 transform origin-center 
+          ${mainSentiment === 'positive' ? 'bg-green-500/90 text-white' :
+                    mainSentiment === 'negative' ? 'bg-red-500/90 text-white' : 'bg-gray-500/90 text-white'}
+          text-xs font-semibold shadow-md`}
+                >
+                  {mainSentiment}
+                </div>
+
+                {/* Sentiment Meter */}
+                <div className="mb-6">
+                  <div className="flex justify-between mb-2 text-sm font-medium text-gray-600">
+                    <span className="text-green-600">Positive {sentimentCounts.positive}</span>
+                    <span className="text-gray-600">Neutral {sentimentCounts.neutral}</span>
+                    <span className="text-red-600">Negative {sentimentCounts.negative}</span>
+                  </div>
+                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="flex h-full">
+                      <div
+                        className="bg-green-500 transition-all duration-500 ease-out"
+                        style={{ width: `${(sentimentCounts.positive / item.articles.length) * 100}%` }}
+                      />
+                      <div
+                        className="bg-gray-400 transition-all duration-500 ease-out"
+                        style={{ width: `${(sentimentCounts.neutral / item.articles.length) * 100}%` }}
+                      />
+                      <div
+                        className="bg-red-500 transition-all duration-500 ease-out"
+                        style={{ width: `${(sentimentCounts.negative / item.articles.length) * 100}%` }}
+                      />
                     </div>
                   </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${mainSentiment === 'positive'
-                      ? 'bg-green-100 text-green-800'
-                      : mainSentiment === 'negative'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-gray-100 text-gray-800'
-                      }`}
-                  >
-                    {mainSentiment.charAt(0).toUpperCase() + mainSentiment.slice(1)}
-                  </span>
-                </header>
+                </div>
 
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 text-green-600"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                {/* Trending News */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-700 border-b pb-2">
+                    Trending Headlines
+                  </h3>
+                  {item.articles.slice(0, 3).map((article, j) => (
+                    <a
+                      key={j}
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block hover:bg-white/50 rounded-lg p-3 transition-colors"
+                    >
+                      <div className="flex gap-3">
+                        <div className={`flex-shrink-0 w-1.5 rounded-full 
+                  ${article.sentiment === 'positive' ? 'bg-green-400' :
+                            article.sentiment === 'negative' ? 'bg-red-400' : 'bg-gray-400'}`}
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                            {article.title}
+                          </p>
+                          {article.publishedAt && (
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(article.publishedAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          )}
+                        </div>
+                        {article.imageUrl && (
+                          <img
+                            src={article.imageUrl}
+                            alt={article.title}
+                            className="w-16 h-16 object-cover rounded-lg"
                           />
-                        </svg>
-                        <span className="text-xs font-medium text-gray-600">Positive</span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 text-gray-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span className="text-xs font-medium text-gray-600">Neutral</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 text-red-600"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span className="text-xs font-medium text-gray-600">Negative</span>
-                      </div>
-                    </div>
-
-                    <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden relative flex items-center">
-                      {item.articles.length > 0 ? (
-                        <>
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{
-                              width: `${(sentimentCounts.positive / item.articles.length) * 100}%`
-                            }}
-                            transition={{ duration: 0.8, type: 'spring' }}
-                            className="absolute left-0 h-full bg-gradient-to-r from-green-400 to-green-500"
-                          />
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{
-                              width: `${(sentimentCounts.neutral / item.articles.length) * 100}%`
-                            }}
-                            transition={{ duration: 0.8, type: 'spring', delay: 0.2 }}
-                            className="absolute h-full bg-gradient-to-r from-gray-300 to-gray-400"
-                            style={{
-                              left: `${(sentimentCounts.positive / item.articles.length) * 100}%`
-                            }}
-                          />
-                          // Update the negative sentiment's left position calculation in the Country Cards Grid section
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{
-                              width: `${(sentimentCounts.negative / item.articles.length) * 100}%`
-                            }}
-                            transition={{ duration: 0.8, type: 'spring', delay: 0.4 }}
-                            className="absolute h-full bg-gradient-to-r from-red-400 to-red-500"
-                            style={{
-                              left: `${((sentimentCounts.positive + sentimentCounts.neutral) / item.articles.length) * 100}%`
-                            }}
-                          />
-                        </>
-                      ) : (
-                        <div className="w-full h-full bg-gray-200" />
-                      )}
-                    </div>
-
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <div className="flex flex-col items-center">
-                        <span className="font-medium">{sentimentCounts.positive}</span>
-                        <span className="text-xs text-gray-500">
-                          {item.articles.length > 0
-                            ? `${Math.round(
-                              (sentimentCounts.positive / item.articles.length) * 100
-                            )}%`
-                            : '0%'}
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <span className="font-medium">{sentimentCounts.neutral}</span>
-                        <span className="text-xs text-gray-500">
-                          {item.articles.length > 0
-                            ? `${Math.round(
-                              (sentimentCounts.neutral / item.articles.length) * 100
-                            )}%`
-                            : '0%'}
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <span className="font-medium">{sentimentCounts.negative}</span>
-                        <span className="text-xs text-gray-500">
-                          {item.articles.length > 0
-                            ? `${Math.round(
-                              (sentimentCounts.negative / item.articles.length) * 100
-                            )}%`
-                            : '0%'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* News Articles */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                      Trending News
-                    </h3>
-                    <div className="space-y-3">
-                      {item.articles.slice(0, 3).map((article, j) => (
-                        <a
-                          key={j}
-                          href={article.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group block p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <div className="flex items-start gap-3">
-                            <div
-                              className={`w-1.5 h-full rounded-full ${article.sentiment === 'positive'
-                                ? 'bg-green-500'
-                                : article.sentiment === 'negative'
-                                  ? 'bg-red-500'
-                                  : 'bg-gray-400'
-                                }`}
-                            />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                                {article.title}
-                              </p>
-                              {article.description && (
-                                <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                                  {article.description}
-                                </p>
-                              )}
-                              {article.publishedAt && (
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                  {new Date(article.publishedAt).toLocaleDateString()}
-                                </p>
-                              )}
-                            </div>
-                            {article.imageUrl && (
-                              <img
-                                src={article.imageUrl}
-                                alt={article.title}
-                                className="w-16 h-16 object-cover rounded-lg"
-                              />
-                            )}
-                          </div>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
+                    </a>
+                  ))}
                 </div>
               </motion.article>
             )

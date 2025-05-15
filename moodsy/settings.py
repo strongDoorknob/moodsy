@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'authapp',
-    'moodlog'
+    'moodlog',
+    'news'
 ]
 
 MIDDLEWARE = [
