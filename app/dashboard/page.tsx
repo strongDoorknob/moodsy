@@ -80,52 +80,45 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-blue-50 text-black font-sans">
+    <div className="min-h-screen p-8 bg-[#FFF7F3] text-[#C599B6] font-pixel crt-filter">
       {showPopup && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl p-8 shadow-2xl w-[90%] max-w-md text-center relative border border-gray-200">
-            <div className="absolute top-4 right-4">
+        <div className="fixed inset-0 bg-[#C599B6]/80 backdrop-blur-sm flex justify-center items-center z-50">
+          <div className="bg-[#FFF7F3] border-4 border-[#C599B6] p-6 shadow-[8px_8px_0_#C599B6] w-[90%] max-w-md text-center relative">
+            <button
+              onClick={() => setShowPopup(false)}
+              className="absolute top-2 right-2 text-[#C599B6] hover:text-[#E6B2BA] text-2xl"
+            >
+              ×
+            </button>
+            <h2 className="text-2xl font-bold mb-4 border-b-4 border-[#C599B6] pb-2">LIMIT REACHED</h2>
+            <p className="mb-4 text-[#E6B2BA]">
+              FREE TIER MAXED! UNLOCK PRO FOR UNLIMITED ACCESS
+            </p>
+            <div className="flex justify-center gap-4">
               <button
                 onClick={() => setShowPopup(false)}
-                className="text-gray-400 hover:text-gray-600 transition"
-                aria-label="Close"
+                className="px-4 py-2 border-2 border-[#C599B6] hover:bg-[#C599B6]/10"
               >
-                &times;
-              </button>
-            </div>
-            <div className="mb-4">
-              <h2 className="text-2xl font-semibold text-gray-800">Limit Reached</h2>
-              <p className="mt-2 text-gray-600 text-sm">
-                You've used all 10 free mood data fetches. Unlock unlimited access with the <strong>Pro edition</strong>.
-              </p>
-            </div>
-            <div className="mt-6 flex justify-center gap-4">
-              <button
-                onClick={() => setShowPopup(false)}
-                className="px-4 py-2 text-sm rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
-              >
-                Maybe Later
+                LATER
               </button>
               <button
                 onClick={handleProUpgrade}
-                className="px-5 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition"
+                className="px-4 py-2 bg-[#C599B6] text-[#FFF7F3] hover:bg-[#E6B2BA] border-2 border-[#C599B6]"
               >
-                Go Pro
+                GO PRO ▲
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <main className="max-w-8xl mx-auto">
+      <main className="max-w-7xl mx-auto">
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3">
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-              Global Mood Monitor
-            </span>
+          <h1 className="text-4xl font-bold mb-4 border-4 border-[#C599B6] p-4 bg-[#FFF7F3] shadow-[8px_8px_0_#C599B6]">
+            GLOBAL MOOD QUEST
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Track real-time multilingual sentiment analysis across global news. Add country codes below to monitor media sentiment.
+          <p className="text-[#E6B2BA] max-w-2xl mx-auto border-2 border-[#C599B6] p-3 bg-[#FFF7F3]">
+            TRACK SENTIMENT ACROSS REALMS
           </p>
         </header>
 
@@ -136,47 +129,46 @@ export default function DashboardPage() {
                 value={inputCode}
                 onChange={e => setInputCode(e.target.value)}
                 onKeyDown={onInputKey}
-                placeholder="Enter country code (e.g., US, FR)"
-                className="w-full px-6 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors pr-24"
+                placeholder="ENTER REALM CODE"
+                className="w-full px-6 py-3 border-4 border-[#C599B6] bg-[#FFF7F3] font-pixel placeholder-[#C599B6]/60 pr-24 focus:outline-none focus:border-[#E6B2BA]"
                 disabled={fetchCount >= 10}
               />
               <button
                 onClick={addCode}
-                className={`absolute right-2 top-2 px-6 py-2 rounded-lg transition-colors ${fetchCount >= 10
-                  ? 'bg-gray-400 cursor-not-allowed text-white'
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+                className={`absolute right-3 top-1/2 -translate-y-1/2 px-5 py-2 text-sm rounded-md font-bold transition-all duration-200 
+                  ${fetchCount >= 10
+                    ? 'bg-[#FAD0C4] text-[#FFF7F3] border-2 border-[#E6B2BA] cursor-not-allowed'
+                    : 'bg-[#C599B6] text-white border-2 border-[#C599B6] hover:bg-[#E6B2BA]'
                   }`}
                 disabled={fetchCount >= 10}
               >
-                Add Country
+                + ADD REALM
               </button>
             </div>
 
-            <div className="flex gap-2 items-center text-sm text-gray-500">
-              <span>Supported codes:</span>
+            <div className="flex gap-2 items-center text-sm text-[#C599B6]">
+              <span>VALID REALMS:</span>
               <div className="flex gap-1.5 flex-wrap">
                 {ALL_CODES.map(code => (
-                  <span key={code} className="px-2 py-1 bg-gray-100 rounded-md">{code}</span>
+                  <span key={code} className="px-2 py-1 bg-[#FFF7F3] border-2 border-[#C599B6]">
+                    {code}
+                  </span>
                 ))}
               </div>
             </div>
 
-            <div className="text-sm text-gray-600 mt-2">
-              Countries added: <span className={fetchCount >= 10 ? 'text-red-600 font-bold' : 'font-semibold'}>{fetchCount}</span>/10
+            <div className="text-sm text-[#C599B6] mt-2">
+              REALMS ADDED: <span className={fetchCount >= 10 ? 'text-[#E6B2BA] font-bold' : 'font-bold'}>{fetchCount}</span>/10
             </div>
 
             {inputError && (
-              <div className="flex items-center gap-2 text-red-500 mt-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                {inputError}
+              <div className="flex items-center gap-2 text-[#E6B2BA] mt-2">
+                ⚠️ {inputError}
               </div>
             )}
           </div>
         </section>
 
-        {/* Selected Countries */}
         {selectedCodes.length > 0 && (
           <section className="mb-8">
             <div className="flex flex-wrap gap-3 justify-center">
@@ -185,26 +177,14 @@ export default function DashboardPage() {
                   key={code}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="px-4 py-2 bg-white border-2 border-gray-200 rounded-full flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow"
+                  className="px-4 py-2 bg-[#FFF7F3] border-4 border-[#C599B6] flex items-center gap-2 shadow-[4px_4px_0_#C599B6] hover:shadow-[6px_6px_0_#C599B6]"
                 >
-                  <span className="font-medium">{code}</span>
+                  <span className="font-bold">{code}</span>
                   <button
                     onClick={() => removeCode(code)}
-                    className="text-gray-400 hover:text-red-500 transition-colors"
-                    aria-label="Remove country"
+                    className="text-[#C599B6] hover:text-[#E6B2BA]"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    ✕
                   </button>
                 </motion.div>
               ))}
@@ -212,42 +192,19 @@ export default function DashboardPage() {
           </section>
         )}
 
-        {/* Loading State */}
         {loading && (
-          <div className="flex justify-center items-center gap-3 text-gray-500 py-12">
-            <svg
-              className="animate-spin h-8 w-8 text-blue-500"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            <span>Analyzing global sentiment...</span>
+          <div className="flex justify-center items-center gap-3 text-[#C599B6] py-12">
+            <span>SCANNING REALMS...</span>
           </div>
         )}
 
-        {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 p-6 rounded-xl text-center text-red-600 max-w-2xl mx-auto my-8">
-            {error}
+          <div className="bg-[#E6B2BA] border-4 border-[#C599B6] p-4 text-center text-[#FFF7F3] max-w-2xl mx-auto my-8">
+            ⚠️ {error}
           </div>
         )}
 
-        {/* Country Cards Grid */}
-        <section className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {data.map((item, i) => {
             const sentimentCounts = item.articles.reduce(
               (acc, article) => {
@@ -268,68 +225,60 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className={`relative p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden
-          ${mainSentiment === 'positive' ? 'bg-gradient-to-br from-green-50/80 to-green-100/20 border-2 border-green-100' :
-                    mainSentiment === 'negative' ? 'bg-gradient-to-br from-red-50/80 to-red-100/20 border-2 border-red-100' :
-                      'bg-gradient-to-br from-gray-50/80 to-gray-100/20 border-2 border-gray-100'}
-        `}
+                className={`relative p-6 border-4 bg-[#FFF7F3] shadow-[8px_8px_0_#C599B6] hover:shadow-[12px_12px_0_#C599B6]
+                  ${mainSentiment === 'positive' ? 'border-[#C599B6]' :
+                    mainSentiment === 'negative' ? 'border-[#E6B2BA]' : 'border-[#FAD0C4]'}`}
               >
-                {/* Country Flag Header */}
                 <div className="flex items-center gap-3 mb-6">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center 
-            ${mainSentiment === 'positive' ? 'bg-green-500' :
-                      mainSentiment === 'negative' ? 'bg-red-500' : 'bg-gray-500'}`
-                  }>
-                    <span className="text-2xl font-bold text-white">{item.country}</span>
+                  <div className={`w-12 h-12 border-4 ${mainSentiment === 'positive' ? 'border-[#C599B6] bg-[#FFF7F3]' :
+                      mainSentiment === 'negative' ? 'border-[#E6B2BA] bg-[#FFF7F3]' :
+                        'border-[#FAD0C4] bg-[#FFF7F3]'} flex items-center justify-center`}>
+                    <span className="text-2xl font-bold">{item.country}</span>
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
+                    <h2 className="text-lg font-bold text-[#C599B6]">
                       {new Intl.DisplayNames(['en'], { type: 'region' }).of(item.country)}
                     </h2>
-                    <p className="text-sm text-gray-500">
-                      {item.articles.length} articles analyzed
+                    <p className="text-[#E6B2BA]">
+                      {item.articles.length} ARTICLES ANALYZED
                     </p>
                   </div>
                 </div>
 
-                {/* Sentiment Ribbon */}
                 <div className={`absolute top-4 right-[-24px] px-8 py-1 rotate-45 transform origin-center 
-          ${mainSentiment === 'positive' ? 'bg-green-500/90 text-white' :
-                    mainSentiment === 'negative' ? 'bg-red-500/90 text-white' : 'bg-gray-500/90 text-white'}
-          text-xs font-semibold shadow-md`}
-                >
+                  ${mainSentiment === 'positive' ? 'bg-[#C599B6]' :
+                    mainSentiment === 'negative' ? 'bg-[#E6B2BA]' : 'bg-[#FAD0C4]'}
+                  text-white text-xs font-bold shadow-md`}>
                   {mainSentiment}
                 </div>
 
-                {/* Sentiment Meter */}
                 <div className="mb-6">
-                  <div className="flex justify-between mb-2 text-sm font-medium text-gray-600">
-                    <span className="text-green-600">Positive {sentimentCounts.positive}</span>
-                    <span className="text-gray-600">Neutral {sentimentCounts.neutral}</span>
-                    <span className="text-red-600">Negative {sentimentCounts.negative}</span>
+                  <div className="flex justify-between mb-2 text-sm font-bold text-[#C599B6]">
+                    <span className="text-[#C599B6]">POS {sentimentCounts.positive}</span>
+                    <span className="text-[#FAD0C4]">NEU {sentimentCounts.neutral}</span>
+                    <span className="text-[#E6B2BA]">NEG {sentimentCounts.negative}</span>
                   </div>
-                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-3 bg-[#FAD0C4] rounded-full overflow-hidden">
                     <div className="flex h-full">
                       <div
-                        className="bg-green-500 transition-all duration-500 ease-out"
+                        className="bg-[#C599B6]"
                         style={{ width: `${(sentimentCounts.positive / item.articles.length) * 100}%` }}
                       />
                       <div
-                        className="bg-gray-400 transition-all duration-500 ease-out"
+                        className="bg-[#FAD0C4]"
                         style={{ width: `${(sentimentCounts.neutral / item.articles.length) * 100}%` }}
                       />
                       <div
-                        className="bg-red-500 transition-all duration-500 ease-out"
+                        className="bg-[#E6B2BA]"
                         style={{ width: `${(sentimentCounts.negative / item.articles.length) * 100}%` }}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Trending News */}
                 <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-700 border-b pb-2">
-                    Trending Headlines
+                  <h3 className="text-sm font-bold text-[#C599B6] border-b-4 border-[#C599B6] pb-2">
+                    TRENDING HEADLINES
                   </h3>
                   {item.articles.slice(0, 3).map((article, j) => (
                     <a
@@ -337,23 +286,22 @@ export default function DashboardPage() {
                       href={article.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group block hover:bg-white/50 rounded-lg p-3 transition-colors"
+                      className="group block hover:bg-[#FAD0C4]/20 p-2 border-2 border-transparent hover:border-[#C599B6]"
                     >
                       <div className="flex gap-3">
-                        <div className={`flex-shrink-0 w-1.5 rounded-full 
-                  ${article.sentiment === 'positive' ? 'bg-green-400' :
-                            article.sentiment === 'negative' ? 'bg-red-400' : 'bg-gray-400'}`}
-                        />
+                        <div className={`w-1.5 ${article.sentiment === 'positive' ? 'bg-[#C599B6]' :
+                            article.sentiment === 'negative' ? 'bg-[#E6B2BA]' : 'bg-[#FAD0C4]'
+                          }`} />
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                          <p className="text-sm font-medium text-[#C599B6] line-clamp-2">
                             {article.title}
                           </p>
                           {article.publishedAt && (
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-xs text-[#E6B2BA] mt-1">
                               {new Date(article.publishedAt).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric'
-                              })}
+                              }).toUpperCase()}
                             </p>
                           )}
                         </div>
@@ -361,7 +309,7 @@ export default function DashboardPage() {
                           <img
                             src={article.imageUrl}
                             alt={article.title}
-                            className="w-16 h-16 object-cover rounded-lg"
+                            className="w-16 h-16 object-cover border-2 border-[#C599B6]"
                           />
                         )}
                       </div>
@@ -373,7 +321,28 @@ export default function DashboardPage() {
           })}
         </section>
       </main>
+
+      <style jsx global>{`
+        @font-face {
+          font-family: 'PixelFont';
+          src: url('/fonts/pixel-font.ttf') format('truetype');
+        }
+
+        .font-pixel {
+          font-family: 'PixelFont', monospace;
+          letter-spacing: 1px;
+        }
+
+        .crt-filter {
+          animation: crt-flicker 0.15s infinite;
+        }
+
+        @keyframes crt-flicker {
+          0% { opacity: 0.9; }
+          50% { opacity: 1; }
+          100% { opacity: 0.9; }
+        }
+      `}</style>
     </div>
   )
-}
-
+} // ✅ This closing brace was missing

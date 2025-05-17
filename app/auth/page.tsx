@@ -54,11 +54,11 @@ export default function AuthPage() {
     e.preventDefault()
     setError(null)
     
-    if (!validateEmail(form.email)) return setError('Please enter a valid email address')
+    if (!validateEmail(form.email)) return setError('Invalid email!')
     if (mode === 'register' && passwordStrength < 3)
-      return setError('Password must meet minimum strength requirements')
+      return setError('Weak password!')
     if (mode === 'register' && form.password !== form.confirm)
-      return setError('Passwords do not match')
+      return setError('Password mismatch!')
 
     setSubmitting(true)
     
@@ -74,8 +74,8 @@ export default function AuthPage() {
         })
       })
 
-      if (res.status === 429) throw new Error('Too many attempts. Please wait.')
-      if (!res.ok) throw new Error((await res.json()).detail || 'Authentication failed')
+      if (res.status === 429) throw new Error('Too many tries!')
+      if (!res.ok) throw new Error((await res.json()).detail || 'Auth failed')
 
       setTimeout(() => router.push('/preview'), 1000)
     } catch (err: any) {
@@ -85,40 +85,37 @@ export default function AuthPage() {
   }
 
   const PasswordStrength = () => (
-    <div className="w-full bg-white/5 rounded-full h-2 mt-2">
+    <div className="w-full bg-[#FAD0C4] h-3 mt-2 border-2 border-[#C599B6]">
       <motion.div
         initial={{ width: 0 }}
         animate={{ 
           width: `${passwordStrength * 25}%`,
-          backgroundColor: passwordStrength < 2 ? '#ef4444' : 
-                          passwordStrength < 3 ? '#eab308' : '#22c55e'
+          backgroundColor: passwordStrength < 2 ? '#FF0000' : 
+                          passwordStrength < 3 ? '#FFFF00' : '#00FF00'
         }}
-        className="h-full rounded-full transition-colors"
+        className="h-full pixelate"
       />
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-      <motion.div
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1 }}
-        className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 to-purple-900/40"
-      >
-        <img
-          src="/img/globe.png"
-          className="h-full w-full object-cover mix-blend-soft-light opacity-50"
-          alt="Background"
-        />
-      </motion.div>
+    <div className="min-h-screen bg-[#FFF7F3] flex items-center justify-center relative overflow-hidden crt-filter">
+      {/* 8-bit Background Pattern */}
+      <div className="absolute inset-0 bg-[#E6B2BA] pattern-grid opacity-20" />
 
       <div className="z-10 w-full max-w-md px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/10"
+          className="bg-[#FFF7F3] p-6 border-4 border-[#C599B6] shadow-[8px_8px_0_#C599B6] relative"
         >
-          <div className="flex gap-4 mb-8 relative">
+          {/* Pixel Corner Decorations */}
+          <div className="absolute top-2 left-2 w-3 h-3 bg-[#C599B6]" />
+          <div className="absolute top-2 right-2 w-3 h-3 bg-[#C599B6]" />
+          <div className="absolute bottom-2 left-2 w-3 h-3 bg-[#C599B6]" />
+          <div className="absolute bottom-2 right-2 w-3 h-3 bg-[#C599B6]" />
+
+          <div className="flex gap-4 mb-6 justify-center">
             {(['signIn', 'register'] as FormMode[]).map((m) => (
               <button
                 key={m}
@@ -126,22 +123,18 @@ export default function AuthPage() {
                   setError(null)
                   setMode(m)
                 }}
-                className={`text-lg font-medium px-4 py-2 relative ${
-                  mode === m ? 'text-white' : 'text-white/50 hover:text-white/80'
+                className={`text-xl font-pixel px-4 py-1 ${
+                  mode === m 
+                    ? 'text-[#C599B6] border-b-4 border-[#E6B2BA]' 
+                    : 'text-[#C599B6]/60 hover:text-[#C599B6]'
                 }`}
               >
-                {m === 'signIn' ? 'Sign In' : 'Register'}
-                {mode === m && (
-                  <motion.div
-                    layoutId="underline"
-                    className="absolute bottom-0 left-0 w-full h-[2px] bg-cyan-400"
-                  />
-                )}
+                {m === 'signIn' ? 'SIGN IN' : 'REGISTER'}
               </button>
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <input
               type="text"
               name="website"
@@ -152,28 +145,24 @@ export default function AuthPage() {
               autoComplete="off"
             />
 
-            <div className="relative group">
-              <FontAwesomeIcon 
-                icon={faEnvelope} 
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-cyan-400" 
-              />
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={(e) => setForm({...form, email: e.target.value})}
-                placeholder="Email address"
-                required
-                className="w-full pl-12 pr-4 py-3 bg-white/5 rounded-xl border border-white/10 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20 placeholder-white/30"
-              />
+            <div className="relative">
+              <div className="flex items-center border-4 border-[#C599B6] bg-[#FFF7F3] p-2">
+                <span className="text-[#C599B6] px-2">📧</span>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={(e) => setForm({...form, email: e.target.value})}
+                  placeholder="EMAIL"
+                  required
+                  className="w-full bg-transparent outline-none font-pixel placeholder-[#C599B6]/60 text-[#C599B6]"
+                />
+              </div>
             </div>
 
-            <div className="relative group">
-              <FontAwesomeIcon 
-                icon={faShieldHalved} 
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-cyan-400" 
-              />
-              <div className="relative">
+            <div className="relative">
+              <div className="flex items-center border-4 border-[#C599B6] bg-[#FFF7F3] p-2">
+                <span className="text-[#C599B6] px-2">🔒</span>
                 <input
                   type={passwordVisibility ? 'text' : 'password'}
                   name="password"
@@ -182,16 +171,16 @@ export default function AuthPage() {
                     setForm({...form, password: e.target.value})
                     if (mode === 'register') debouncedStrength(e.target.value)
                   }}
-                  placeholder="Password"
+                  placeholder="PASSWORD"
                   required
-                  className="w-full pl-12 pr-12 py-3 bg-white/5 rounded-xl border border-white/10 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20 placeholder-white/30"
+                  className="w-full bg-transparent outline-none font-pixel placeholder-[#C599B6]/60 text-[#C599B6]"
                 />
                 <button
                   type="button"
                   onClick={() => setPasswordVisibility(!passwordVisibility)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-cyan-400"
+                  className="text-[#C599B6] px-2 hover:text-[#E6B2BA]"
                 >
-                  <FontAwesomeIcon icon={passwordVisibility ? faEyeSlash : faEye} />
+                  {passwordVisibility ? '👁️' : '👁️🗨️'}
                 </button>
               </div>
               {mode === 'register' && <PasswordStrength />}
@@ -204,21 +193,18 @@ export default function AuthPage() {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  className="relative group"
+                  className="relative"
                 >
-                  <div className="relative">
+                  <div className="flex items-center border-4 border-[#C599B6] bg-[#FFF7F3] p-2">
+                    <span className="text-[#C599B6] px-2">🔁</span>
                     <input
                       type={passwordVisibility ? 'text' : 'password'}
                       name="confirm"
                       value={form.confirm}
                       onChange={(e) => setForm({...form, confirm: e.target.value})}
-                      placeholder="Confirm password"
+                      placeholder="CONFIRM"
                       required
-                      className="w-full pl-12 pr-12 py-3 bg-white/5 rounded-xl border border-white/10 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20 placeholder-white/30"
-                    />
-                    <FontAwesomeIcon 
-                      icon={faShieldHalved} 
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-cyan-400" 
+                      className="w-full bg-transparent outline-none font-pixel placeholder-[#C599B6]/60 text-[#C599B6]"
                     />
                   </div>
                 </motion.div>
@@ -228,34 +214,75 @@ export default function AuthPage() {
             <AnimatePresence>
               {error && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-300 rounded-lg"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="p-2 bg-[#E6B2BA] text-[#FFF7F3] font-pixel text-center border-4 border-[#C599B6]"
                 >
-                  {error}
+                  ⚠️ {error}
                 </motion.div>
               )}
             </AnimatePresence>
 
             <motion.button
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.95 }}
               disabled={isSubmitting}
-              className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-all relative overflow-hidden"
+              className="w-full py-3 bg-[#C599B6] text-[#FFF7F3] font-pixel border-4 border-[#E6B2BA] hover:border-[#FAD0C4] hover:text-[#FAD0C4] transition-all"
             >
-              <span className="relative z-10">
-                {isSubmitting ? 'Processing...' : mode === 'signIn' ? 'Sign In' : 'Create Account'}
-              </span>
-              <motion.div
-                initial={{ x: '-100%' }}
-                animate={{ x: isSubmitting ? '100%' : '0%' }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="absolute inset-0 bg-white/10"
-              />
+              {isSubmitting ? (
+                <span className="animate-pulse">LOADING...</span>
+              ) : mode === 'signIn' ? (
+                'START QUEST ▶'
+              ) : (
+                'CREATE ACCOUNT ▲'
+              )}
             </motion.button>
           </form>
         </motion.div>
+
+        <div className="mt-4 text-center font-pixel text-[#C599B6]">
+          {mode === 'signIn' ? 'NEW USER? ' : 'EXISTING USER? '}
+          <button
+            onClick={() => setMode(mode === 'signIn' ? 'register' : 'signIn')}
+            className="underline hover:text-[#E6B2BA]"
+          >
+            {mode === 'signIn' ? 'REGISTER HERE' : 'LOGIN HERE'}
+          </button>
+        </div>
       </div>
+
+      {/* Global Styles */}
+      <style jsx global>{`
+        @font-face {
+          font-family: 'PixelFont';
+          src: url('/fonts/pixel-font.ttf') format('truetype');
+        }
+        
+        .font-pixel {
+          font-family: 'PixelFont', monospace;
+          letter-spacing: 1px;
+        }
+        
+        .pattern-grid {
+          background-image: linear-gradient(#C599B6 1px, transparent 1px),
+                          linear-gradient(90deg, #C599B6 1px, transparent 1px);
+          background-size: 16px 16px;
+        }
+        
+        .crt-filter {
+          animation: crt-flicker 0.15s infinite;
+        }
+        
+        @keyframes crt-flicker {
+          0% { opacity: 0.9; }
+          50% { opacity: 1; }
+          100% { opacity: 0.9; }
+        }
+        
+        .pixelate {
+          image-rendering: pixelated;
+        }
+      `}</style>
     </div>
   )
 }
