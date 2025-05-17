@@ -138,4 +138,4 @@ REST_FRAMEWORK = {
     ),
 }
 
-ALLOWED_HOSTS = ['https://moodsy-backend.onrender.com']
+ALLOWED_HOSTS = ['moodsy-backend.onrender.com']
