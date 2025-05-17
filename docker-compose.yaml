@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.local
+    # Uncomment below to use Postgres instead of SQLite
+    # depends_on:
+    #   - db
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  # Uncomment and configure this section to use PostgreSQL instead of SQLite
+  # db:
+  #   image: postgres:16
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data/
+  #   environment:
+  #     - POSTGRES_DB=moodsy
+  #     - POSTGRES_USER=moodsy
+  #     - POSTGRES_PASSWORD=moodsy
+  #   ports:
+  #     - "5432:5432"
+  #
+  # volumes:
+  #   postgres_data:
