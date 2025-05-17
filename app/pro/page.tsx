@@ -21,11 +21,11 @@ export default function ProPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#FFF7F3] py-8 px-4 font-pixel crt-filter">
+      <div className="min-h-screen bg-[#FFF7F3] py-8 px-4 font-pixel">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <motion.h1 
+            <motion.h1
               initial={{ y: -20 }}
               animate={{ y: 0 }}
               className="text-4xl font-bold text-[#C599B6] mb-4 border-4 border-[#C599B6] p-4 inline-block shadow-[8px_8px_0_#C599B6]"
@@ -100,7 +100,7 @@ export default function ProPage() {
         </div>
       </div>
 
-      <style jsx global>{`
+      {/* <style jsx global>{`
         @font-face {
           font-family: 'PixelFont';
           src: url('/fonts/pixel-font.ttf') format('truetype');
@@ -110,17 +110,7 @@ export default function ProPage() {
           font-family: 'PixelFont', monospace;
           letter-spacing: 1px;
         }
-
-        .crt-filter {
-          animation: crt-flicker 0.15s infinite;
-        }
-
-        @keyframes crt-flicker {
-          0% { opacity: 0.9; }
-          50% { opacity: 1; }
-          100% { opacity: 0.9; }
-        }
-      `}</style>
+      `}</style> */}
     </>
   )
 }

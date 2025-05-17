@@ -104,10 +104,13 @@ export default function FirstPage() {
 
           <span className="relative z-10 text-[#E6B2BA] flex items-center space-x-3">
             <motion.span
-              animate={isHovered ? { scale: [1, 1.2, 1] } : { scale: 1 }}
-              transition={{ duration: 0.5 }}
+              animate={isHovered ? { x: 5, rotate: [0, 10, -10, 0] } : { x: 0, rotate: 0 }}
+              transition={{
+                rotate: { duration: 0.6, ease: "easeInOut", type: "tween" },
+                x: { type: "spring", stiffness: 300 }
+              }}
             >
-              ⚡
+              ▲
             </motion.span>
             <span>START QUEST</span>
             <motion.span

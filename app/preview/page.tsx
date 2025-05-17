@@ -37,7 +37,7 @@ export default function PreviewPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#FFF7F3] text-[#C599B6] font-pixel overflow-hidden crt-filter">
+    <div className="min-h-screen bg-[#FFF7F3] text-[#C599B6] font-pixel overflow-hidden">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <header className="text-center py-16 space-y-6">
           <motion.h1

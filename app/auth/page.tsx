@@ -4,7 +4,14 @@ import { useState, useEffect, ChangeEvent, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash, faShieldHalved, faEnvelope } from '@fortawesome/free-solid-svg-icons'
+import {
+  faEye,
+  faEyeSlash,
+  faShieldHalved,
+  faEnvelope,
+  faRepeat,
+  faExclamationTriangle
+} from '@fortawesome/free-solid-svg-icons'
 import debounce from 'lodash.debounce'
 
 type FormMode = 'signIn' | 'register'
@@ -25,7 +32,7 @@ export default function AuthPage() {
   const [passwordStrength, setPasswordStrength] = useState(0)
   const [honeypot, setHoneypot] = useState('')
 
-  const validateEmail = (email: string) => 
+  const validateEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
   const calculateStrength = useCallback((password: string) => {
@@ -37,11 +44,13 @@ export default function AuthPage() {
     return strength
   }, [])
 
-  const debouncedStrength = useMemo(() => 
-    debounce((password: string) => {
-      setPasswordStrength(calculateStrength(password))
-    }, 200)
-  , [calculateStrength])
+  const debouncedStrength = useMemo(
+    () =>
+      debounce((password: string) => {
+        setPasswordStrength(calculateStrength(password))
+      }, 200),
+    [calculateStrength]
+  )
 
   useEffect(() => {
     if (honeypot) {
@@ -53,7 +62,7 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    
+
     if (!validateEmail(form.email)) return setError('Invalid email!')
     if (mode === 'register' && passwordStrength < 3)
       return setError('Weak password!')
@@ -61,7 +70,7 @@ export default function AuthPage() {
       return setError('Password mismatch!')
 
     setSubmitting(true)
-    
+
     try {
       const endpoint = mode === 'signIn' ? 'login' : 'register'
       const res = await fetch(`http://localhost:8000/api/auth/${endpoint}/`, {
@@ -88,10 +97,14 @@ export default function AuthPage() {
     <div className="w-full bg-[#FAD0C4] h-3 mt-2 border-2 border-[#C599B6]">
       <motion.div
         initial={{ width: 0 }}
-        animate={{ 
+        animate={{
           width: `${passwordStrength * 25}%`,
-          backgroundColor: passwordStrength < 2 ? '#FF0000' : 
-                          passwordStrength < 3 ? '#FFFF00' : '#00FF00'
+          backgroundColor:
+            passwordStrength < 2
+              ? '#FF0000'
+              : passwordStrength < 3
+              ? '#FFFF00'
+              : '#00FF00'
         }}
         className="h-full pixelate"
       />
@@ -99,7 +112,7 @@ export default function AuthPage() {
   )
 
   return (
-    <div className="min-h-screen bg-[#FFF7F3] flex items-center justify-center relative overflow-hidden crt-filter">
+    <div className="min-h-screen bg-[#FFF7F3] flex items-center justify-center relative overflow-hidden">
       {/* 8-bit Background Pattern */}
       <div className="absolute inset-0 bg-[#E6B2BA] pattern-grid opacity-20" />
 
@@ -109,7 +122,7 @@ export default function AuthPage() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-[#FFF7F3] p-6 border-4 border-[#C599B6] shadow-[8px_8px_0_#C599B6] relative"
         >
-          {/* Pixel Corner Decorations */}
+          {/* Pixel Corners */}
           <div className="absolute top-2 left-2 w-3 h-3 bg-[#C599B6]" />
           <div className="absolute top-2 right-2 w-3 h-3 bg-[#C599B6]" />
           <div className="absolute bottom-2 left-2 w-3 h-3 bg-[#C599B6]" />
@@ -124,8 +137,8 @@ export default function AuthPage() {
                   setMode(m)
                 }}
                 className={`text-xl font-pixel px-4 py-1 ${
-                  mode === m 
-                    ? 'text-[#C599B6] border-b-4 border-[#E6B2BA]' 
+                  mode === m
+                    ? 'text-[#C599B6] border-b-4 border-[#E6B2BA]'
                     : 'text-[#C599B6]/60 hover:text-[#C599B6]'
                 }`}
               >
@@ -145,14 +158,17 @@ export default function AuthPage() {
               autoComplete="off"
             />
 
+            {/* Email */}
             <div className="relative">
               <div className="flex items-center border-4 border-[#C599B6] bg-[#FFF7F3] p-2">
-                <span className="text-[#C599B6] px-2">📧</span>
+                <span className="text-[#C599B6] px-2">
+                  <FontAwesomeIcon icon={faEnvelope} />
+                </span>
                 <input
                   type="email"
                   name="email"
                   value={form.email}
-                  onChange={(e) => setForm({...form, email: e.target.value})}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="EMAIL"
                   required
                   className="w-full bg-transparent outline-none font-pixel placeholder-[#C599B6]/60 text-[#C599B6]"
@@ -160,15 +176,18 @@ export default function AuthPage() {
               </div>
             </div>
 
+            {/* Password */}
             <div className="relative">
               <div className="flex items-center border-4 border-[#C599B6] bg-[#FFF7F3] p-2">
-                <span className="text-[#C599B6] px-2">🔒</span>
+                <span className="text-[#C599B6] px-2">
+                  <FontAwesomeIcon icon={faShieldHalved} />
+                </span>
                 <input
                   type={passwordVisibility ? 'text' : 'password'}
                   name="password"
                   value={form.password}
                   onChange={(e) => {
-                    setForm({...form, password: e.target.value})
+                    setForm({ ...form, password: e.target.value })
                     if (mode === 'register') debouncedStrength(e.target.value)
                   }}
                   placeholder="PASSWORD"
@@ -180,12 +199,13 @@ export default function AuthPage() {
                   onClick={() => setPasswordVisibility(!passwordVisibility)}
                   className="text-[#C599B6] px-2 hover:text-[#E6B2BA]"
                 >
-                  {passwordVisibility ? '👁️' : '👁️🗨️'}
+                  <FontAwesomeIcon icon={passwordVisibility ? faEye : faEyeSlash} />
                 </button>
               </div>
               {mode === 'register' && <PasswordStrength />}
             </div>
 
+            {/* Confirm Password */}
             <AnimatePresence>
               {mode === 'register' && (
                 <motion.div
@@ -196,12 +216,16 @@ export default function AuthPage() {
                   className="relative"
                 >
                   <div className="flex items-center border-4 border-[#C599B6] bg-[#FFF7F3] p-2">
-                    <span className="text-[#C599B6] px-2">🔁</span>
+                    <span className="text-[#C599B6] px-2">
+                      <FontAwesomeIcon icon={faRepeat} />
+                    </span>
                     <input
                       type={passwordVisibility ? 'text' : 'password'}
                       name="confirm"
                       value={form.confirm}
-                      onChange={(e) => setForm({...form, confirm: e.target.value})}
+                      onChange={(e) =>
+                        setForm({ ...form, confirm: e.target.value })
+                      }
                       placeholder="CONFIRM"
                       required
                       className="w-full bg-transparent outline-none font-pixel placeholder-[#C599B6]/60 text-[#C599B6]"
@@ -211,6 +235,7 @@ export default function AuthPage() {
               )}
             </AnimatePresence>
 
+            {/* Error Display */}
             <AnimatePresence>
               {error && (
                 <motion.div
@@ -219,11 +244,13 @@ export default function AuthPage() {
                   exit={{ opacity: 0, scale: 0.8 }}
                   className="p-2 bg-[#E6B2BA] text-[#FFF7F3] font-pixel text-center border-4 border-[#C599B6]"
                 >
-                  ⚠️ {error}
+                  <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
+                  {error}
                 </motion.div>
               )}
             </AnimatePresence>
 
+            {/* Submit */}
             <motion.button
               whileTap={{ scale: 0.95 }}
               disabled={isSubmitting}
@@ -240,6 +267,7 @@ export default function AuthPage() {
           </form>
         </motion.div>
 
+        {/* Switch Mode */}
         <div className="mt-4 text-center font-pixel text-[#C599B6]">
           {mode === 'signIn' ? 'NEW USER? ' : 'EXISTING USER? '}
           <button
@@ -257,28 +285,18 @@ export default function AuthPage() {
           font-family: 'PixelFont';
           src: url('/fonts/pixel-font.ttf') format('truetype');
         }
-        
+
         .font-pixel {
           font-family: 'PixelFont', monospace;
           letter-spacing: 1px;
         }
-        
+
         .pattern-grid {
           background-image: linear-gradient(#C599B6 1px, transparent 1px),
-                          linear-gradient(90deg, #C599B6 1px, transparent 1px);
+            linear-gradient(90deg, #C599B6 1px, transparent 1px);
           background-size: 16px 16px;
         }
-        
-        .crt-filter {
-          animation: crt-flicker 0.15s infinite;
-        }
-        
-        @keyframes crt-flicker {
-          0% { opacity: 0.9; }
-          50% { opacity: 1; }
-          100% { opacity: 0.9; }
-        }
-        
+
         .pixelate {
           image-rendering: pixelated;
         }

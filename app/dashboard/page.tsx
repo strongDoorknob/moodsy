@@ -20,6 +20,9 @@ type CountryMood = {
 
 const ALL_CODES = ['US', 'TH', 'JP', 'GB', 'DE', 'CA', 'FR', 'IT', 'ES', 'AU', 'RU', 'IN'] as const
 
+// API base URL - สามารถเปลี่ยนเป็น environment variable ได้ในอนาคต
+const API_BASE_URL = 'http://127.0.0.1:8000'
+
 export default function DashboardPage() {
   const [data, setData] = useState<CountryMood[]>([])
   const [loading, setLoading] = useState(false)
@@ -47,15 +50,43 @@ export default function DashboardPage() {
       }
 
       setLoading(true)
-      fetch(`http://127.0.0.1:8000/api/sentiment/?country=${code}`)
-        .then(r => (r.ok ? r.json() : Promise.reject()))
-        .then((arr: ArticleWithSentiment[]) => {
-          setData(prev => [...prev, { country: code, articles: arr }])
+      setError(null) // Clear any previous errors
+      
+      // เรียก API endpoint ที่มีอยู่แล้ว
+      fetch(`${API_BASE_URL}/api/sentiment/?country=${code.toLowerCase()}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`)
+          }
+          return response.json()
+        })
+        .then(data => {
+          // แก้ไขการจัดการ response ให้เข้ากับรูปแบบที่ backend ส่งกลับมา
+          let articles: ArticleWithSentiment[] = []
+          
+          // ตรวจสอบว่า response เป็นรูปแบบใด
+          if (Array.isArray(data)) {
+            // กรณีที่ backend ส่งข้อมูลมาเป็น array โดยตรง
+            articles = data
+          } else if (data.results && Array.isArray(data.results)) {
+            // กรณีที่ backend ส่งข้อมูลมาในรูปแบบ { status, totalResults, results }
+            articles = data.results
+          } else if (data.error) {
+            throw new Error(data.error)
+          } else {
+            throw new Error('Invalid API response format')
+          }
+          
+          // เพิ่มข้อมูลประเทศใหม่เข้าไปใน state
+          setData(prev => [...prev, { country: code, articles }])
           setSelectedCodes(prev => [...prev, code])
           setFetchCount(newCount)
           setInputError(null)
         })
-        .catch(() => setError(`Failed to fetch data for ${code}`))
+        .catch((err) => {
+          console.error('Fetch error:', err)
+          setError(`Failed to fetch data for ${code}: ${err.message}`)
+        })
         .finally(() => setLoading(false))
     }
 
@@ -80,7 +111,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen p-8 bg-[#FFF7F3] text-[#C599B6] font-pixel crt-filter">
+    <div className="min-h-screen p-8 bg-[#FFF7F3] text-[#C599B6] font-pixel">
       {showPopup && (
         <div className="fixed inset-0 bg-[#C599B6]/80 backdrop-blur-sm flex justify-center items-center z-50">
           <div className="bg-[#FFF7F3] border-4 border-[#C599B6] p-6 shadow-[8px_8px_0_#C599B6] w-[90%] max-w-md text-center relative">
@@ -332,17 +363,7 @@ export default function DashboardPage() {
           font-family: 'PixelFont', monospace;
           letter-spacing: 1px;
         }
-
-        .crt-filter {
-          animation: crt-flicker 0.15s infinite;
-        }
-
-        @keyframes crt-flicker {
-          0% { opacity: 0.9; }
-          50% { opacity: 1; }
-          100% { opacity: 0.9; }
-        }
       `}</style>
     </div>
   )
-} // ✅ This closing brace was missing
+}
