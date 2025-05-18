@@ -20,8 +20,7 @@ type CountryMood = {
 
 const ALL_CODES = ['US', 'TH', 'JP', 'GB', 'DE', 'CA', 'FR', 'IT', 'ES', 'AU', 'RU', 'IN'] as const
 
-// API base URL - สามารถเปลี่ยนเป็น environment variable ได้ในอนาคต
-const API_BASE_URL = 'http://127.0.0.1:8000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://moodsy-backend.onrender.com'
 
 export default function DashboardPage() {
   const [data, setData] = useState<CountryMood[]>([])
