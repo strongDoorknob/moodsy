@@ -16,7 +16,7 @@ HF_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 def get_sentiment_external(text):
-    api_url = "https://api-inference.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english"
+    api_url = "https://api-inference.huggingface.co/models/nlptown/bert-base-multilingual-uncased-sentiment"
     headers = {"Authorization": f"Bearer {HF_API_KEY}"}
     resp = requests.post(api_url, headers=headers, json={"inputs": text}, timeout=10)
     resp.raise_for_status()
