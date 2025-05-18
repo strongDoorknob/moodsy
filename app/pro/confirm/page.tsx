@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGamepad, faCheckCircle, faShieldHalved } from '@fortawesome/free-solid-svg-icons'
+import Image from 'next/image'
 
 export default function ConfirmPage() {
   const [form, setForm] = useState({
@@ -45,7 +46,7 @@ export default function ConfirmPage() {
               <h2 className="text-xl font-bold mb-6 border-b-4 border-[#C599B6] pb-2">YOUR QUEST ITEMS</h2>
               <div className="flex items-center space-x-5 mb-8">
                 <div className="w-24 h-24 bg-[#FAD0C4] border-4 border-[#C599B6] p-2">
-                  <img src="/img/intro-pro.png" alt="Moodsy PRO" className="w-full h-full object-contain pixelate" />
+                  <Image src="/img/intro-pro.png" alt="Moodsy PRO" className="w-full h-full object-contain pixelate" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold">MOODSY PRO EDITION</h3>
@@ -60,7 +61,7 @@ export default function ConfirmPage() {
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>KING'S TAX</span>
+                  <span>KING`&apos;S TAX</span>
                   <span>${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold pt-2 border-t-4 border-[#C599B6]">

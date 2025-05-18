@@ -8,7 +8,7 @@ import { faChartLine, faGlobe, faLock, faSearch } from '@fortawesome/free-solid-
 
 export default function PreviewPage() {
   const router = useRouter()
-  const [loaded, setLoaded] = useState(false)
+  const [, setLoaded] = useState(false)
   const [showTooltip, setShowTooltip] = useState<string | null>(null)
 
   useEffect(() => {

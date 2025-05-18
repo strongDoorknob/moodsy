@@ -10,7 +10,7 @@ export default function FirstPage() {
   const [showEasterEgg, setShowEasterEgg] = useState(false)
   const router = useRouter()
   const { scrollY } = useScroll()
-  const y = useTransform(scrollY, [0, 300], [0, 100])
+  // const y = useTransform(scrollY, [0, 300], [0, 100])
 
   useEffect(() => {
     setIsMounted(true)
