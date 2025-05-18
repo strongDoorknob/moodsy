@@ -13,6 +13,7 @@ import {
   faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons'
 import debounce from 'lodash.debounce'
+import { API_URL } from '../utils/api'
 
 type FormMode = 'signIn' | 'register'
 
@@ -73,7 +74,7 @@ export default function AuthPage() {
 
     try {
       const endpoint = mode === 'signIn' ? 'login' : 'register'
-      const res = await fetch(`http://localhost:8000/api/auth/${endpoint}/`, {
+      const res = await fetch(`${API_URL}/api/auth/${endpoint}/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

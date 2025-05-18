@@ -25,8 +25,8 @@ SECRET_KEY = 'django-insecure-1psgy0)y*n_qnb3*!ee_5rs9)7jl+%xd+32$(8obda)x*+gla$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'moodsy-backend.onrender.com']
-
+ALLOWED_HOSTS = ['*']
+ALLOWED_ORIGINS = ['https://moodsy-frontend.onrender.com', 'http://localhost:3000']
 
 # Application definition
 
