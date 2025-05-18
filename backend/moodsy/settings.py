@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-1psgy0)y*n_qnb3*!ee_5rs9)7jl+%xd+32$(8obda)x*+gla$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'moodsy-backend.onrender.com']
 
 
 # Application definition
@@ -137,5 +137,3 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
-
-ALLOWED_HOSTS = ['moodsy-backend.onrender.com']
