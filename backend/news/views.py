@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv  # type: ignore
 from django.views.decorators.http import require_GET
 from django.utils.dateparse import parse_datetime
-from models import NewsArticle  # type: ignore
+from .models import NewsArticle
 
 # Load environment variables
 load_dotenv('.env.local')
